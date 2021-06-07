@@ -31,23 +31,6 @@ depth_size = nc_t.sizes["depth"]
 
 vol = xr.DataArray( np.zeros((lon_size,lat_size,depth_size)) , coords=[lon,lat,depth], dims=["lat","lon","depth"])
 
-# I = lon.values + 1/8
-# II = lon.values - 1/8
-# III = lat.values + 1/8
-# IV = lat.values - 1/8
-# V = lon.values
-
-# AB = hv.haversine( (I[0],IV[0]) , (II[0],IV[0]) )
-# CD = hv.haversine( (I[0],III[0]), (II[0],III[0]) )
-# EF = hv.haversine( (V[0],IV[0]),  (V[0],III[0]) )
-
-# area = 1/2 * (AB+CD) * EF
-# print(area)
-
-
-# for i in range(0,lon_size-1):
-#     for j in range(0,lat_size-1):
-#         for k in range(0,depth_size-1):
     
 area = xr.DataArray( np.zeros((lat_size,lon_size)) , coords=[lat.values,lon.values], dims=["lat","lon"])
     
