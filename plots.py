@@ -1,7 +1,9 @@
-import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from haversine import haversine
+
+
+#%%
 
 file_t = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/WOA_data/woa18_A5B7_t00_04.nc'
 file_s = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/WOA_data/woa18_A5B7_s00_04.nc'
@@ -22,9 +24,13 @@ data_s = data_s.isel(time=0)
 data_s = data_s.where(data_s.lat > 60.0)
 
 
+
+#%%
+
 # plot both datasets (w/o outliers!)
 plt.figure()
 tem_surface = data_t.isel(depth=0)
+print(tem_surface)
 tem_surface.plot(robust=True)
 plt.ylim(60,90)
 
@@ -32,7 +38,3 @@ plt.figure()
 sal_surface = data_s.isel(depth=0)
 sal_surface.plot(robust=True)
 plt.ylim(60,90)
-
-
-x = haversine( (41,0), (42,0), unit='m')
-print(x)
