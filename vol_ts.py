@@ -10,45 +10,118 @@ import numpy as np
 import haversine as hv
 import matplotlib.pyplot as plt
 
+
+
+# filenames for T and S data files
 file_t = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/WOA_data/woa18_A5B7_t00_04.nc'
 file_s = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/WOA_data/woa18_A5B7_s00_04.nc'
 
-# open NetCDF files for temperature and salinity WOA data
+# get Datasets of WOA temperature and salinity from NetCDF files
 nc_t = xr.open_dataset(file_t, decode_times=False)
 nc_s = xr.open_dataset(file_s, decode_times=False)
 
-# print(nc_t)
+# get correct T, S data arrays out
+data_t = nc_t["t_an"]
+data_s = nc_s["s_an"]
+
+print(data_t)
 
 
-lon = nc_t.coords["lon"]
-lat = nc_t.coords["lat"]
-depth = nc_t.coords["depth"]
+
+# get coordinate values - same for T and S, I checked
+lon = nc_t.coords["lon"].values
+lat = nc_t.coords["lat"].values
+depth = nc_t.coords["depth"].values
+
+# get lengths of coordinate arrays
 lon_size = nc_t.sizes["lon"]
 lat_size = nc_t.sizes["lat"]
 depth_size = nc_t.sizes["depth"]
 
 
 
-vol = xr.DataArray( np.zeros((lon_size,lat_size,depth_size)) , coords=[lon,lat,depth], dims=["lat","lon","depth"])
 
-    
-area = xr.DataArray( np.zeros((lat_size,lon_size)) , coords=[lat.values,lon.values], dims=["lat","lon"])
-    
+# make DataArrays for intermediate quantities    
+area = xr.DataArray( np.zeros((lat_size,lon_size)) , coords=[lat,lon], dims=["lat","lon"])
+crossec = xr.DataArray( np.zeros((depth_size,lat_size)) , coords=[depth,lat], dims=["depth","lat"])
+
+# DataArrays of volumes
+vol = xr.DataArray( np.zeros((depth_size,lat_size,lon_size)) , coords=[depth,lat,lon], dims=["depth","lat","lon"])
+ 
+
+
+## LAT & LON
 
 for i in range(0,lat_size-1):
+    
+    print("lat: ",lat[i])
+    
     for j in range(0,lon_size-1):
         
-            lat_val = lat.values[i]
-            lon_val = lon.values[j]
+        
+        # find distances N/S, E/W around point, 1/8" on each side
+        length = hv.haversine( (lat[i] - 1/8, lon[j]), (lat[i] + 1/8, lon[j]) )
+        width = hv.haversine( (lat[i], lon[j] - 1/8), (lat[i], lon[j] + 1/8) )
+        
+        # find & store approx. surface area around current point
+        area.values[i,j] = length * width
             
-            # haversine is in km!
-            vert = hv.haversine( (lat_val - 1/8, lon_val), (lat_val + 1/8, lon_val) )
-            hori = hv.haversine( (lat_val, lon_val - 1/8), (lat_val, lon_val + 1/8) )
+        
+        ## DEPTH
+        
+        for k in range(0,depth_size):
             
-            area.values[i,j] = vert * hori
+            # top of water column
+            if k == 0:
+                height = depth[k+1] - depth[k]
+            # bottom of water column
+            elif k == depth_size-1:
+                height = depth[k] - depth[k-1]     
+            # interior
+            else:
+                height = depth[k+1] - depth[k-1]
+                
+            # factor of 1/2 since each of the cases needs that, to avg.
+            # factor of 1/1000 to convert from m to km !!!
+            height *= 1/2 * 1/1000
 
+            # find & store approx. volume around current point
+            vol.values[k,i,j] = length * width * height
             
+            # store volume in cross-section also
+            crossec.values[k,i] = length * width * height
+            
+            
+print("done")            
 
+
+plt.figure()
 area.plot()
+plt.title("Sector area by (lat,lon)")
 
-print(np.amax(area.values))
+plt.figure() 
+crossec.plot()
+plt.gca().invert_yaxis()
+plt.title("Volume by (lat,depth)")
+
+
+dataset = xr.Dataset(
+    {
+        "temperature": (["depth","lat","lon"],data_t.isel(time=0)),
+        "salinity": (["depth","lat","lon"],data_s.isel(time=0)),
+        "volume": (["depth","lat","lon"],vol.values),
+    },
+    coords={
+        "lat": data_t.coords["lat"],
+        "lon": data_t.coords["lon"],
+        "depth": data_t.coords["depth"],
+    }, 
+)
+
+for i in range(depth_size-1):
+    print(depth[i],"|",depth[i+1] - depth[i])
+
+
+print(dataset)
+
+dataset.to_netcdf("tsv.nc")
