@@ -10,7 +10,8 @@ Created on Tue Jun  8 09:32:36 2021
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
-
+import matplotlib.colors as colors
+from gsw import conversions
 
 
 #%%#####################
@@ -32,6 +33,38 @@ depth = nc_tsv.coords["depth"].values
 lat = nc_tsv.coords["lat"].values
 lon = nc_tsv.coords["lon"].values
 
+
+
+
+#%%########################
+### convert T to pot. T ###
+###########################
+
+
+
+pT = temperature
+
+for i in range(0,len(lat)):
+    
+    # latitude filter
+    if lat[i] < 60:
+        continue
+    
+    for j in range(0,len(lon)):
+        for k in range(0,len(depth)):
+            
+            # depth filter
+            if depth[k] < 200:
+                continue
+            
+            ### convert T to pT
+            if ~np.isnan(temperature[k,i,j]):
+                # find pressure at depth
+                pressure = conversions.p_from_z(-1 * depth[k],lat[i])
+                # find potential temperature
+                pT[k,i,j] = conversions.pt0_from_t(salinity[k,i,j],temperature[k,i,j],pressure)       
+
+print("done with T-pT conversion")
 
 
 #%%##########################
@@ -71,7 +104,7 @@ nc_tsv.close()
 
 
 # flatten all three arrays into 1D
-T = temperature.flatten()
+T = pT.flatten()
 S = salinity.flatten()
 V = volume.flatten()
 
@@ -118,13 +151,10 @@ for i in range(0,N_points):
 # get rid of any T-S states with zero volume
 V_matrix[V_matrix == 0] = np.nan
 
-# log-transform to make the plot more readable
-V_matrix[:] = np.log(V_matrix[:])
-
 # histogram of volumes
-plt.figure()
-V_flat = V_matrix.flatten()
-plt.hist(V_flat,bins=100)
+# plt.figure()
+# V_flat = V_matrix.flatten()
+# plt.hist(V_flat,bins=100)
 
 
 
@@ -137,9 +167,9 @@ plt.hist(V_flat,bins=100)
 
 # 2D color plot of volumetric T-S
 plt.figure()
-plt.pcolormesh(S_bins,T_bins,V_matrix,cmap="YlOrRd")
+plt.pcolormesh(S_bins,T_bins,V_matrix,cmap="YlOrRd", norm=colors.LogNorm())
 cbar = plt.colorbar()
-cbar.set_label("Volume (km^3)")
-plt.xlabel("salinity")
-plt.ylabel("temperature")
+cbar.set_label("volume (km^3)")
+plt.xlabel("salinity (g/kg)")
+plt.ylabel("potential temperature (Celsius)")
 plt.title("Volumetric T-S plot for Arctic Ocean")

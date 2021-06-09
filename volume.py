@@ -143,7 +143,7 @@ plt.title("Volume by (lat,depth)")
 
 dataset = xr.Dataset(
     {
-        "pot_temp": (["depth","lat","lon"],pT),
+        "temperature": (["depth","lat","lon"],data_t.values),
         "salinity": (["depth","lat","lon"],data_s.values),
         "volume": (["depth","lat","lon"],vol.values),
     },
