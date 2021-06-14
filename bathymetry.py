@@ -25,7 +25,7 @@ def find_bottom(data,depth,isobath):
         # get bottom depth by index
         bath_depth = depth[bath_count-1]
         
-        # if above 200m isobath, set to NaN
+        # if above given isobath, set to NaN
         if bath_depth < isobath:
             bath_depth = np.nan
     
@@ -41,6 +41,13 @@ dat = dat.isel(time=0)
 dat = dat.transpose("lat","lon","depth","nbounds")
 
 # running over full dataset (via vectorization)
-full_bath = xr.apply_ufunc(find_bottom, dat.t_an, dat.depth, 200, input_core_dims=[["depth"],["depth"],[]], vectorize=True)
+full_bath = xr.apply_ufunc(find_bottom, dat.t_an, dat.depth, 0, input_core_dims=[["depth"],["depth"],[]], vectorize=True)
 print(full_bath)
 full_bath.plot()
+
+# add bathymetry to TSV NetCDF file
+file_tsv = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/whoi_code/tsv.nc'
+tsv = xr.open_dataset(file_tsv, decode_times=False)
+tsv["bathymetry"] = full_bath
+tsv.to_netcdf("tsv.nc")
+tsv.close()
