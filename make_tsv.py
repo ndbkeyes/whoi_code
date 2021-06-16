@@ -15,18 +15,20 @@ import matplotlib.colors as colors
 
 #%% open NetCDF files
 
+print("opening files")
+
 # open bathymetrically masked data
 file_bath = 'NetCDFs/data_bath.nc'
 dat = xr.open_dataset(file_bath, decode_times=False, autoclose=True)
-print(dat)
 
 # open volume matrix
 file_vol = 'NetCDFs/volume.nc'
 vol = xr.open_dataset(file_vol, decode_times=False, autoclose=True)
-print(vol)
 
 
 #%% create V matrix by T, S
+
+print("binning T, S")
 
 
 # flatten all three arrays into 1D
@@ -41,10 +43,10 @@ S = S[nan_bool]
 V = V[nan_bool]
 
 # make T-S bins
-t_increment = 0.125
-s_increment = 0.0125
-T_bins = np.arange(-3,11,t_increment)
-S_bins = np.arange(23,36,s_increment)
+t_increment = 0.5
+s_increment = 0.25
+T_bins = np.arange(-3,12,t_increment)
+S_bins = np.arange(23,36.5,s_increment)
 
 # bin each T, S value
 T_dig = np.digitize(T,T_bins)
@@ -56,6 +58,8 @@ V_matrix = np.zeros((len(T_bins),len(S_bins)))
 
 
 #%% fill V matrix
+
+print("filling V matrix")
 
 ### add up volumes for each T-S state
 for i in range(0,len(T)):
@@ -75,6 +79,8 @@ V_matrix[V_matrix == 0] = np.nan
 
 #%% make volumetric T-S plot
 
+print("plotting")
+
 plt.figure()
 plt.pcolormesh(S_bins,T_bins,V_matrix,cmap="YlOrRd", norm=colors.LogNorm())
 cbar = plt.colorbar()
@@ -88,6 +94,8 @@ plt.title("Volumetric T-S plot for Arctic Ocean")
 #%%
 dat.close()
 vol.close()
+
+print("done")
 
 
 

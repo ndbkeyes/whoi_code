@@ -15,6 +15,9 @@ import matplotlib.pyplot as plt
 
 
 #%% get prepared data from NetCDF file!
+
+print("opening data file")
+
 file_t = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/whoi_code/NetCDFs/data.nc'
 dat = xr.open_dataset(file_t, decode_times=False, autoclose=True)
 print(dat)
@@ -41,6 +44,8 @@ vol      = xr.DataArray( np.empty((len(depth),len(lat),len(lon))) , coords=[dept
 vol.name = "volume"
 vol.values[:] = np.nan
 
+
+print("finding volumes")
 
 
 ### LAT ###
@@ -101,4 +106,6 @@ plt.figure()
 crossec.plot()
 plt.gca().invert_yaxis()
 plt.title("Volume by (lat,depth)")
+
+print("done")
 

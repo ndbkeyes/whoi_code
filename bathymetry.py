@@ -28,14 +28,22 @@ def find_bottom(data,depth):
     return bath_depth
     
 
+print("opening data file")
+
 # load file for T (using T only, since NaN distribution is same in S)
 file = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/whoi_code/NetCDFs/data.nc'
 dat = xr.open_dataset(file, decode_times=False, autoclose=True)
+
+
+print("building bathymetry")
 
 # construct bathymetry & plot
 full_bath = xr.apply_ufunc(find_bottom, dat.temperature, dat.depth, input_core_dims=[["depth"],["depth"]], vectorize=True)
 print(full_bath)
 full_bath.plot()
+
+
+print("masking isobath")
 
 # introduce isobath at 200m
 iso_bath = full_bath.where(full_bath >= 200)
@@ -49,6 +57,8 @@ dat["bathymetry"] = full_bath
 dat["bath_mask"] = bath_mask
 
 
+print("saving & plotting")
+
 # save masked data & bathymetry to NetCDF
 dat.to_netcdf('NetCDFs/data_bath.nc',mode='w')
 
@@ -57,3 +67,6 @@ plt.figure()
 dat.CT.isel(depth=0).plot(robust=True)
 plt.figure()
 dat.SA.isel(depth=0).plot(robust=True)
+
+
+print("done")
