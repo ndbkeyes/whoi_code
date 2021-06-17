@@ -74,8 +74,10 @@ dataset.to_netcdf("NetCDFs/data.nc",mode='w')
 # plot both datasets (at surface)
 plt.figure()
 dataset.CT.isel(depth=0).plot(robust=True)
+plt.ylim(60,90)
 plt.figure()
 dataset.SA.isel(depth=0).plot(robust=True)
+plt.ylim(60,90)
 
 
 print("done")
