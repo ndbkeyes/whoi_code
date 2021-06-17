@@ -15,7 +15,7 @@ import matplotlib.colors as colors
 
 #%% open NetCDF files
 
-print("opening files")
+print("opening & filtering files")
 
 # open bathymetrically masked data
 file_bath = 'NetCDFs/data_bath.nc'
@@ -25,6 +25,21 @@ dat = xr.open_dataset(file_bath, decode_times=False, autoclose=True)
 file_vol = 'NetCDFs/volume.nc'
 vol = xr.open_dataset(file_vol, decode_times=False, autoclose=True)
 
+mask1 = (dat.lat > 60) & (dat.lat < 70) & (dat.lon > 150)  & (dat.lon < 180)
+mask2 = (dat.lat > 60) & (dat.lat < 67) & (dat.lon > 17)   & (dat.lon < 40)
+mask3 = (dat.lat > 60) & (dat.lat < 70) & (dat.lon > -180)  & (dat.lon < -170)
+mask4 = (dat.lat > 60) & (dat.lat < 73) & (dat.lon > -130) & (dat.lon < -70)
+dat["CT"] = dat.CT.where( (~mask1) & (~mask2) & (~mask3) & (~mask4) )
+dat["SA"] = dat.SA.where( (~mask1) & (~mask2) & (~mask3) & (~mask4) )
+
+# plt.figure()
+# mask1.plot()
+
+# plt.figure()
+# mask2.plot()
+
+plt.figure()
+dat.SA.isel(depth=60).plot(robust=True)
 
 #%% create V matrix by T, S
 
@@ -43,8 +58,8 @@ S = S[nan_bool]
 V = V[nan_bool]
 
 # make T-S bins
-t_increment = 0.5
-s_increment = 0.25
+t_increment = 0.1
+s_increment = 0.05
 T_bins = np.arange(-3,12,t_increment)
 S_bins = np.arange(23,36.5,s_increment)
 

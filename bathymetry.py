@@ -46,7 +46,8 @@ full_bath.plot()
 print("masking isobath")
 
 # introduce isobath at 200m
-iso_bath = full_bath.where(full_bath >= 200)
+lvl = 200
+iso_bath = full_bath.where(full_bath >= lvl)
 # convert to T/F mask
 bath_mask = ~np.isnan(iso_bath)
 # apply mask to data (all variables!)
@@ -67,6 +68,10 @@ plt.figure()
 dat.CT.isel(depth=0).plot(robust=True)
 plt.figure()
 dat.SA.isel(depth=0).plot(robust=True)
+plt.figure()
+dat.bath_mask.plot()
+plt.title(f"{lvl} m isobath")
+
 
 
 print("done")
