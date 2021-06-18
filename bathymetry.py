@@ -61,7 +61,7 @@ dat["bath_mask"] = bath_mask
 print("saving & plotting")
 
 # save masked data & bathymetry to NetCDF
-dat.to_netcdf('NetCDFs/data_bath.nc',mode='w')
+dat.to_netcdf('NetCDFs/data_isobath.nc',mode='w')
 
 # plot bathymetrically masked datasets (at surface)
 plt.figure()

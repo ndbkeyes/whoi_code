@@ -76,7 +76,7 @@ plt.figure()
 dataset.CT.isel(depth=0).plot(robust=True)
 plt.ylim(60,90)
 plt.figure()
-dataset.SA.isel(depth=0).plot(robust=True)
+dataset.SA.isel(depth=66).plot(robust=True)
 plt.ylim(60,90)
 
 

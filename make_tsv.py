@@ -12,35 +12,55 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import gsw
+from matplotlib.colors import ListedColormap
 
 
 #%% open NetCDF files
 
 print("opening & filtering files")
 
+# file_data = 'NetCDFs/data.nc'
+# dat_orig = xr.open_dataset(file_data, decode_times=False, autoclose=True)
+
 # open bathymetrically masked data
-file_bath = 'NetCDFs/data_bath.nc'
+file_bath = 'NetCDFs/data_isobath.nc'
 dat = xr.open_dataset(file_bath, decode_times=False, autoclose=True)
 
 # open volume matrix
 file_vol = 'NetCDFs/volume.nc'
 vol = xr.open_dataset(file_vol, decode_times=False, autoclose=True)
 
+
+
+
+# rightmost part of Pacific - near Russia
 mask1 = (dat.lat > 60) & (dat.lat < 70) & (dat.lon > 150)  & (dat.lon < 180)
+# areas by Nordic countries
 mask2 = (dat.lat > 60) & (dat.lat < 67) & (dat.lon > 17)   & (dat.lon < 40)
-mask3 = (dat.lat > 60) & (dat.lat < 70) & (dat.lon > -180)  & (dat.lon < -170)
-mask4 = (dat.lat > 60) & (dat.lat < 73) & (dat.lon > -130) & (dat.lon < -70)
-dat["CT"] = dat.CT.where( (~mask1) & (~mask2) & (~mask3) & (~mask4) )
-dat["SA"] = dat.SA.where( (~mask1) & (~mask2) & (~mask3) & (~mask4) )
+# leftmost part of Pacific - near Alaska
+mask3 = (dat.lat > 60) & (dat.lat < 65) & (dat.lon > -180) & (dat.lon < -170)
+# Canadian island water & Hudson Bay
+mask4 = (dat.lat > 60) & (dat.lat < 72) & (dat.lon > -130) & (dat.lon < -70)
 
-# plt.figure()
-# mask1.plot()
 
-# plt.figure()
-# mask2.plot()
+ncm1 = ListedColormap(np.array([0.5,0,0.9]))
+ncm2 = ListedColormap(np.array([0,0,0]))
+
+mask_plot = mask1 | mask2 | mask3 | mask4
 
 plt.figure()
-dat.SA.isel(depth=60).plot(robust=True)
+dat.SA.isel(depth=0).plot()
+mask_plot = mask_plot.where(mask_plot == 1)
+mask_plot.plot(alpha=0.05,cmap=ncm1)
+plt.ylim(60,90)
+
+plt.savefig("map_masking.png",dpi=500)
+
+cond = (~mask1) & (~mask2) & (~mask3) & (~mask4)
+dat["CT"] = dat.CT.where( cond )
+dat["SA"] = dat.SA.where( cond )
+
+
 
 #%% create V matrix by T, S
 
@@ -62,10 +82,10 @@ S = S[nan_bool]
 V = V[nan_bool]
 
 # make T-S bins
-t_increment = 0.1
-s_increment = 0.05
-T_bins = np.arange(-3,12,t_increment)
-S_bins = np.arange(23,36.5,s_increment)
+t_increment = 1
+s_increment = 0.5
+T_bins = np.arange(-3,13,t_increment)
+S_bins = np.arange(23,37,s_increment)
 
 # bin each T, S value
 T_dig = np.digitize(T,T_bins)
@@ -118,7 +138,7 @@ freeze_pt = xr.DataArray( np.zeros((len(S_bins))), coords=[S_bins], dims=["SA"] 
 # fill array with GSW freezing point values
 freeze_pt.values = gsw.CT_freezing(freeze_pt.SA, 0, 0)
 # plot freezing line
-fpl = freeze_pt.plot(ax=axes, color="green",linestyle="dashed",linewidth=2)
+fpl = freeze_pt.plot(ax=axes, color="green",linestyle="dashed",linewidth=1)
 
 # axes.legend(["isopycnals","freezing line"])
 
@@ -132,5 +152,5 @@ plt.xlabel("absolute salinity (g/kg)")
 plt.ylabel("conservative temperature (Celsius)")
 plt.title("Volumetric T-S plot for Arctic Ocean")
 
-
+plt.savefig("../plots/tsv.png",dpi=200)
 
