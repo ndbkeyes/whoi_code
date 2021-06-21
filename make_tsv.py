@@ -158,3 +158,11 @@ plt.ylim(np.amin(T_bins),np.amax(T_bins))
 
 plt.savefig("../plots/tsv.png",dpi=200)
 
+
+
+#%% save TSV to NetCDF
+
+tsv = xr.DataArray( V_matrix , coords=[T_bins,S_bins], dims=["T","S"])
+tsv.name = "volume"
+tsv.to_netcdf("NetCDFs/tsv.nc")
+
