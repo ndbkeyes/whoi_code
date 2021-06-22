@@ -92,7 +92,7 @@ T_dig = np.digitize(T,T_bins)
 S_dig = np.digitize(S,S_bins)
 
 # 2D matrix to hold volumes
-V_matrix = np.zeros((len(T_bins),len(S_bins)))
+V_matrix = np.zeros((len(T_bins)-1,len(S_bins)-1))
 
 
 
@@ -118,11 +118,16 @@ V_matrix[V_matrix == 0] = np.nan
 
 
 
-#%% add isopycnals and freezing line
+#%% PLOTTING
+
 
 print("plotting")
 fig, axes = plt.subplots()
 
+
+
+
+### isopycnals
 
 # make empty array with coordinates of CT and SA
 pot_dens = xr.DataArray(np.zeros((len(S_bins),len(T_bins))), coords=[S_bins,T_bins], dims=["SA","CT"] )
@@ -134,6 +139,9 @@ pot_dens = pot_dens.transpose()
 pdi = pot_dens.plot.contour(ax=axes, colors='blue',linewidths=0.4,levels=12)
 axes.clabel(pdi, pdi.levels, fontsize=6)
 
+
+### freezing line
+
 # make empty array with coordinates of SA only
 freeze_pt = xr.DataArray( np.zeros((len(S_bins))), coords=[S_bins], dims=["SA"] )
 # fill array with GSW freezing point values
@@ -144,7 +152,7 @@ fpl = freeze_pt.plot(ax=axes, color="green",linestyle="dashed",linewidth=1)
 
 
 
-#%% plot volumetric T-S
+###  volumetric T-S
 
 pcm = axes.pcolormesh(S_bins,T_bins,V_matrix,cmap="YlOrRd", norm=colors.LogNorm())
 cbar = plt.colorbar(pcm)
@@ -160,9 +168,14 @@ plt.savefig("../plots/tsv.png",dpi=200)
 
 
 
+
+
+
 #%% save TSV to NetCDF
+
+print("saving")
 
 tsv = xr.DataArray( V_matrix , coords=[T_bins,S_bins], dims=["T","S"])
 tsv.name = "volume"
 tsv.to_netcdf("NetCDFs/tsv.nc")
-
+tsv.close()
