@@ -55,15 +55,24 @@ def shanentc(p_arr,p_grid):
     H = shanent2(p_grid) - shanent1(p_arr)
     
     return np.round(H,2)
+
+
+
+
+
+def J(p1_arr,p2_arr,p_grid):
     
+    J = shanent1(p1_arr) + shanent1(p2_arr) - shanent2(p_grid)
+    return np.round(J,2)
 
 
 #%%
 
 
-# read in Arctic volumetric T-S
-file_tsv = 'NetCDFs/tsv.nc'
+# read in volumetric T-S
+file_tsv = 'NetCDFs/tsv_grn.nc'
 dat = xr.open_dataset(file_tsv, decode_times=False, autoclose=True)
+dat.close()
 
 # get volumes by T-S class, set NaN's to zero
 p_TS = dat.volume
@@ -85,7 +94,6 @@ print("S marginal entropy:",shanent1(p_S))
 print("T-S joint entropy:",shanent2(p_TS))
 print("T conditional entropy:",shanentc(p_S,p_TS))
 print("S conditional entropy:",shanentc(p_T,p_TS))
-
-dat.close()
+print("J dependence metric:", J(p_T,p_S,p_TS))
 
 

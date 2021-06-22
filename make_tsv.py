@@ -164,7 +164,7 @@ plt.title("Volumetric T-S plot for Arctic Ocean")
 plt.xlim(np.amin(S_bins),np.amax(S_bins))
 plt.ylim(np.amin(T_bins),np.amax(T_bins))
 
-plt.savefig("../plots/tsv.png",dpi=200)
+plt.savefig("../plots/tsv_arc.png",dpi=200)
 
 
 
@@ -177,5 +177,5 @@ print("saving")
 
 tsv = xr.DataArray( V_matrix , coords=[T_bins,S_bins], dims=["T","S"])
 tsv.name = "volume"
-tsv.to_netcdf("NetCDFs/tsv.nc")
+tsv.to_netcdf("NetCDFs/tsv_arc.nc")
 tsv.close()

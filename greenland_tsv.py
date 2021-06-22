@@ -38,6 +38,6 @@ plt.ylim(np.amin(T_bins),np.amax(T_bins))
 
 # save as DataArray & NetCDF
 tsv = xr.DataArray( grn_tsv , coords=[T_bins,S_bins], dims=["T","S"])
-tsv.name = "grn_volume"
-tsv.to_netcdf("NetCDFs/carmack_tsv.nc")
+tsv.name = "volume"
+tsv.to_netcdf("NetCDFs/tsv_grn.nc")
 tsv.close()
