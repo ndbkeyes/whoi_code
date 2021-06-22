@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
 
+# univariate / marginal Shannon information entropy
 def shanent1(p_arr):
     
     H = 0
@@ -27,6 +28,7 @@ def shanent1(p_arr):
     
     
     
+# bivariate / joint Shannon information entropy
 def shanent2(p_grid):
     
     
@@ -47,6 +49,7 @@ def shanent2(p_grid):
     return H
     
 
+# conditional Shannon information entropy
 def shanentc(p_arr,p_grid):
     
     H = shanent2(p_grid) - shanent1(p_arr)
@@ -58,15 +61,19 @@ def shanentc(p_arr,p_grid):
 #%%
 
 
+# read in Arctic volumetric T-S
 file_tsv = 'NetCDFs/tsv.nc'
 dat = xr.open_dataset(file_tsv, decode_times=False, autoclose=True)
 
+# get volumes by T-S class, set NaN's to zero
 p_TS = dat.volume
 p_TS.values = np.nan_to_num(p_TS.values)
 
+# get totals by T and S classes separately
 p_T = p_TS.sum("S")
 p_S = p_TS.sum("T")
 
+# normalize all to get frequencies (probabilities)
 V_total = p_TS.sum()
 p_TS = p_TS / V_total
 p_T = p_T / V_total
@@ -75,46 +82,10 @@ p_S = p_S / V_total
 
 print("T marginal entropy:",shanent1(p_T))
 print("S marginal entropy:",shanent1(p_S))
-
 print("T-S joint entropy:",shanent2(p_TS))
-
 print("T conditional entropy:",shanentc(p_S,p_TS))
 print("S conditional entropy:",shanentc(p_T,p_TS))
 
 dat.close()
-
-
-
-#%%
-
-# read in CSV file
-grn_tsv = np.genfromtxt("../carmack_tsv.csv", delimiter=',')
-
-# get T and S coordinates
-T_bins = grn_tsv[1:,0]
-S_bins = grn_tsv[0,1:]
-
-# trim T, S coordinates out of data matrix
-grn_tsv = grn_tsv[1:,1:]
-
-
-# plot volumetric T-S
-# can't use xr.plot() because it doesn't let you do binning correctly
-grn_trim = grn_tsv[1:,0:-1]     # needed to reduce dimensionality to plot with bin edges
-pcm = plt.pcolormesh(S_bins,T_bins,grn_trim,norm=colors.LogNorm())
-cbar = plt.colorbar(pcm)
-cbar.set_label("volume (km$^3$)")
-plt.xlabel("salinity (o/oo)")
-plt.ylabel("potential temperature (Celsius)")
-plt.title("Carmack & Aagard - Volumetric T-S plot for Greenland Sea")
-plt.xlim(33.75,np.amax(S_bins))
-plt.ylim(np.amin(T_bins),np.amax(T_bins))
-
-
-# save as DataArray & NetCDF
-tsv = xr.DataArray( grn_tsv , coords=[T_bins,S_bins], dims=["T","S"])
-tsv.name = "grn_volume"
-tsv.to_netcdf("NetCDFs/carmack_tsv.nc")
-tsv.close()
 
 
