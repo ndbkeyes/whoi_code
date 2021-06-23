@@ -13,7 +13,7 @@ import matplotlib.colors as colors
 
 
 
-def plot_tsv(xarr,corner="UR"):
+def plot_tsv(xarr,xylabels,corner="UR"):
     
     # assuming that coordinates are bins' left/lower edges
     
@@ -33,6 +33,9 @@ def plot_tsv(xarr,corner="UR"):
     pcm = plt.pcolormesh(xarr.salinity,xarr.temperature,pltmat,norm=colors.LogNorm())
     cbar = plt.colorbar(pcm)
     cbar.set_label("volume (km$^3$)")    
+    
+    plt.xlabel(xylabels[0])
+    plt.ylabel(xylabels[1])
     
     
     
@@ -83,19 +86,10 @@ cond = (tsv.temperature >= -1.5) & (tsv.temperature < 0) & (tsv.salinity >= 34.8
 deep = tsv.where(cond)
 upper = tsv.where(~cond)
 
-# plot resulting water masses
 plt.figure()
-deep.plot()
+plot_tsv(upper,["salinity","potential temperature"])
 plt.figure()
-upper.plot()
-
-
-
-
-
-
-plt.figure()
-plot_tsv(upper)
+plot_tsv(deep,["salinity","potential temperature"])
 
 
 

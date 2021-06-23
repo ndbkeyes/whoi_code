@@ -11,7 +11,7 @@ import xarray as xr
 
 
 # univariate / marginal Shannon information entropy
-def shanent1(p_arr):
+def H1(p_arr):
     
     H = 0
     
@@ -20,14 +20,14 @@ def shanent1(p_arr):
             H += p * np.log2(p)
             
     H *= -1
-    H = np.round(H.values,2)
+    H = np.round(H.values,3)
     
     return H
     
     
     
 # bivariate / joint Shannon information entropy
-def shanent2(p_grid):
+def H2(p_grid):
     
     
     dim = p_grid.shape
@@ -42,17 +42,17 @@ def shanent2(p_grid):
                 H += p * np.log2(p)
     
     H *= -1
-    H = np.round(H.values,2)
+    H = np.round(H.values,3)
     
     return H
     
 
 # conditional Shannon information entropy
-def shanentc(p_arr,p_grid):
+def Hc(p_arr,p_grid):
     
-    H = shanent2(p_grid) - shanent1(p_arr)
+    H = H2(p_grid) - H1(p_arr)
     
-    return np.round(H,2)
+    return np.round(H,3)
 
 
 
@@ -60,8 +60,39 @@ def shanentc(p_arr,p_grid):
 
 def J(p1_arr,p2_arr,p_grid):
     
-    J = shanent1(p1_arr) + shanent1(p2_arr) - shanent2(p_grid)
-    return np.round(J,2)
+    J = H1(p1_arr) + H1(p2_arr) - H2(p_grid)
+    return np.round(J,3)
+
+
+
+
+def entropy(p_TS):
+    
+    p_TS.values = np.nan_to_num(p_TS.values)
+
+    # get totals by T and S classes separately
+    
+    tdim = p_TS.dims[0]
+    sdim = p_TS.dims[1]
+    
+    p_T = p_TS.sum(sdim)
+    p_S = p_TS.sum(tdim)
+    
+    # normalize all to get frequencies (probabilities)
+    V_total = p_TS.sum()
+    p_TS = p_TS / V_total
+    p_T = p_T / V_total
+    p_S = p_S / V_total
+    
+    
+    print("H(T) - marginal entropy:\t\t",H1(p_T))
+    print("H(S) - marginal entropy:\t\t",H1(p_S))
+    print("H(T)/H(S) - entropy ratio:\t\t",np.round(H1(p_T)/H1(p_S),2))
+    print("H(T,S) - joint entropy:\t\t\t",H2(p_TS))
+    print("H_S(T) - conditional entropy:\t",Hc(p_S,p_TS))
+    print("H_T(S) - conditional entropy:\t",Hc(p_T,p_TS))
+    print("J(T,S) - dependence metric:\t\t", J(p_T,p_S,p_TS))
+
 
 
 
@@ -69,37 +100,27 @@ def J(p1_arr,p2_arr,p_grid):
 #%%
 
 
-# read in volumetric T-S
-file_tsv = 'NetCDFs/tsv_grn.nc'
-dat = xr.open_dataset(file_tsv, decode_times=False, autoclose=True)
-dat.close()
+# read in volumetric T-S files
+dat_grn = xr.open_dataset('NetCDFs/tsv_grn.nc', decode_times=False, autoclose=True)
+dat_arc = xr.open_dataset('NetCDFs/tsv_arc.nc', decode_times=False, autoclose=True)
 
+# entropy calcs for entirety of Greenland Sea and Arctic Ocean
+print("grn")
+entropy(dat_grn.volume)
+print("arc")
+entropy(dat_arc.volume)
 
-print("Entropy quantities - Greenland Sea")
+# condition to get Greenland deep water vs. upper water
+cond = (dat_grn.temperature >= -1.5) & (dat_grn.temperature < 0) & (dat_grn.salinity >= 34.85) & (dat_grn.salinity < 34.95)
+deep = dat_grn.where(cond)
+upper = dat_grn.where(~cond)
 
-# get volumes by T-S class, set NaN's to zero
-p_TS = dat.volume
-p_TS.values = np.nan_to_num(p_TS.values)
+# entropy calcs for Greenland deep vs upper
+print("grn - deep")
+entropy(deep.volume)
+print("grn - upper")
+entropy(upper.volume)
 
-# get totals by T and S classes separately
-p_T = p_TS.sum("S")
-p_S = p_TS.sum("T")
-
-# normalize all to get frequencies (probabilities)
-V_total = p_TS.sum()
-p_TS = p_TS / V_total
-p_T = p_T / V_total
-p_S = p_S / V_total
-
-
-print("H(T) - marginal entropy:\t\t",shanent1(p_T))
-print("H(S) - marginal entropy:\t\t",shanent1(p_S))
-print("H(T)/H(S) - entropy ratio:\t\t",np.round(shanent1(p_T)/shanent1(p_S),2))
-print("H(T,S) - joint entropy:\t\t\t",shanent2(p_TS))
-print("H_S(T) - conditional entropy:\t",shanentc(p_S,p_TS))
-print("H_T(S) - conditional entropy:\t",shanentc(p_T,p_TS))
-print("J(T,S) - dependence metric:\t\t", J(p_T,p_S,p_TS))
-
-
-
-
+# close NC files
+dat_grn.close()
+dat_arc.close()
