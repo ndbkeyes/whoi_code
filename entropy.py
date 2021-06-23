@@ -8,8 +8,6 @@ Created on Thu Jun 17 16:37:23 2021
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 
 
 # univariate / marginal Shannon information entropy
@@ -66,6 +64,8 @@ def J(p1_arr,p2_arr,p_grid):
     return np.round(J,2)
 
 
+
+
 #%%
 
 
@@ -73,6 +73,9 @@ def J(p1_arr,p2_arr,p_grid):
 file_tsv = 'NetCDFs/tsv_grn.nc'
 dat = xr.open_dataset(file_tsv, decode_times=False, autoclose=True)
 dat.close()
+
+
+print("Entropy quantities - Greenland Sea")
 
 # get volumes by T-S class, set NaN's to zero
 p_TS = dat.volume
@@ -89,11 +92,14 @@ p_T = p_T / V_total
 p_S = p_S / V_total
 
 
-print("T marginal entropy:",shanent1(p_T))
-print("S marginal entropy:",shanent1(p_S))
-print("T-S joint entropy:",shanent2(p_TS))
-print("T conditional entropy:",shanentc(p_S,p_TS))
-print("S conditional entropy:",shanentc(p_T,p_TS))
-print("J dependence metric:", J(p_T,p_S,p_TS))
+print("H(T) - marginal entropy:\t\t",shanent1(p_T))
+print("H(S) - marginal entropy:\t\t",shanent1(p_S))
+print("H(T)/H(S) - entropy ratio:\t\t",np.round(shanent1(p_T)/shanent1(p_S),2))
+print("H(T,S) - joint entropy:\t\t\t",shanent2(p_TS))
+print("H_S(T) - conditional entropy:\t",shanentc(p_S,p_TS))
+print("H_T(S) - conditional entropy:\t",shanentc(p_T,p_TS))
+print("J(T,S) - dependence metric:\t\t", J(p_T,p_S,p_TS))
+
+
 
 
