@@ -35,10 +35,10 @@ vol = xr.open_dataset(file_vol, decode_times=False, autoclose=True)
 
 # rightmost part of Pacific - near Russia
 mask1 = (dat.lat > 60) & (dat.lat < 70) & (dat.lon > 150)  & (dat.lon < 180)
-# areas by Nordic countries
-mask2 = (dat.lat > 60) & (dat.lat < 67) & (dat.lon > 17)   & (dat.lon < 40)
 # leftmost part of Pacific - near Alaska
-mask3 = (dat.lat > 60) & (dat.lat < 65) & (dat.lon > -180) & (dat.lon < -170)
+mask2 = (dat.lat > 60) & (dat.lat < 65) & (dat.lon > -180) & (dat.lon < -170)
+# areas by Nordic countries
+mask3 = (dat.lat > 60) & (dat.lat < 67) & (dat.lon > 17)   & (dat.lon < 40)
 # Canadian island water & Hudson Bay
 mask4 = (dat.lat > 60) & (dat.lat < 72) & (dat.lon > -130) & (dat.lon < -70)
 
@@ -57,6 +57,7 @@ plt.ylim(60,90)
 
 # filter out data in masking areas
 cond = (~mask1) & (~mask2) & (~mask3) & (~mask4)
+cond = (~mask1) & (~mask2) & (~mask3)
 dat["CT"] = dat.CT.where( cond )
 dat["SA"] = dat.SA.where( cond )
 
@@ -82,8 +83,12 @@ S = S[nan_bool]
 V = V[nan_bool]
 
 # make T-S bins
-t_increment = 0.5
-s_increment = 0.25
+
+# res1: 0.1, 0.05
+# res2: 0.5, 0.25
+# res3: 1, 0.5
+t_increment = 0.1
+s_increment = 0.05
 T_bins = np.arange(-3,13,t_increment)
 S_bins = np.arange(22,37,s_increment)
 
@@ -163,6 +168,9 @@ plt.title("Volumetric T-S plot for Arctic Ocean")
 
 plt.xlim(np.amin(S_bins),np.amax(S_bins))
 plt.ylim(np.amin(T_bins),np.amax(T_bins))
+
+# plt.xlim(25,35)
+# plt.ylim(-2,1.5)
 
 plt.savefig("../plots/tsv_arc.png",dpi=200)
 

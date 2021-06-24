@@ -15,8 +15,8 @@ import gsw
 print("opening data files")
 
 # load files for T and S
-file_t = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/WOA_data/woa18_A5B7_t00_04.nc'
-file_s = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/WOA_data/woa18_A5B7_s00_04.nc'
+file_t = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/data/woa18_A5B7_t00_04.nc'
+file_s = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/data/woa18_A5B7_s00_04.nc'
 nc_t = xr.open_dataset(file_t, decode_times=False, autoclose=True)
 nc_s = xr.open_dataset(file_s, decode_times=False, autoclose=True)
 

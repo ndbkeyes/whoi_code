@@ -12,7 +12,7 @@ import matplotlib.colors as colors
 
 
 
-
+# wrapper function on pcolormesh to adapt to TSV xarray
 def plot_tsv(xarr,xylabels,corner="UR"):
     
     # assuming that coordinates are bins' left/lower edges
@@ -43,7 +43,7 @@ def plot_tsv(xarr,xylabels,corner="UR"):
 
 
 # read in CSV file
-grn_tsv = np.genfromtxt("../carmack_tsv.csv", delimiter=',')
+grn_tsv = np.genfromtxt("../data/tsv_grn_summer.csv", delimiter=',')
 
 # get T and S coordinates
 T_bins = grn_tsv[1:,0]
@@ -90,7 +90,4 @@ plt.figure()
 plot_tsv(upper,["salinity","potential temperature"])
 plt.figure()
 plot_tsv(deep,["salinity","potential temperature"])
-
-
-
 
