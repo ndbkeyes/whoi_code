@@ -6,6 +6,7 @@ Created on Wed Jun 16 17:51:55 2021
 """
 
 import xarray as xr
+import numpy as np
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 
@@ -29,14 +30,42 @@ dat_s.attrs["long_name"] = "salinity"
 
 # polar T plot
 plt.figure()
-pT = dat_t.plot(robust=True,subplot_kws=dict(projection=ccrs.Orthographic(-20, 90), facecolor="white"),transform=ccrs.PlateCarree(),)
+pT = dat_t.plot(robust=True,subplot_kws=dict(projection=ccrs.Orthographic(-20, 90), facecolor="white"),transform=ccrs.PlateCarree())
 pT.axes.set_global()
 pT.axes.coastlines()
 pT.axes.set_extent([20,200,20,200])
 
 # polar S plot
 plt.figure()
-pS = dat_s.plot(robust=True,subplot_kws=dict(projection=ccrs.Orthographic(-20, 90), facecolor="white"),transform=ccrs.PlateCarree(),)
+pS = dat_s.plot(robust=True,subplot_kws=dict(projection=ccrs.Orthographic(-20, 90), facecolor="white"),transform=ccrs.PlateCarree())
 pS.axes.set_global()
 pS.axes.coastlines()
 pS.axes.set_extent([20,200,20,200])
+
+
+
+
+
+
+
+#%% plot bathymetry mask in polar view
+
+file_bath = 'NetCDFs/data_isobath.nc'
+dat_b = xr.open_dataset(file_bath, decode_times=False, autoclose=True)
+
+print(dat_b)
+dat_mask = dat_b.bath_mask.astype(int)
+dat_bath = dat_b.bathymetry
+
+
+plt.figure()
+pB = dat_mask.plot(robust=True,subplot_kws=dict(projection=ccrs.Orthographic(-20, 90), facecolor="white"),transform=ccrs.PlateCarree(),cmap="Blues")
+pB.axes.set_global()
+pB.axes.coastlines()
+pB.axes.set_extent([20,200,20,200])
+
+plt.figure()
+pBa = dat_bath.plot(robust=True,subplot_kws=dict(projection=ccrs.Orthographic(-20, 90), facecolor="white"),transform=ccrs.PlateCarree(),cmap="viridis")
+pBa.axes.set_global()
+pBa.axes.coastlines()
+pBa.axes.set_extent([20,200,20,200])

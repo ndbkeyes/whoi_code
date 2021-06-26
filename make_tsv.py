@@ -9,11 +9,11 @@ Created on Tue Jun  8 09:32:36 2021
 
 import numpy as np
 import xarray as xr
+import gsw
+import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-import gsw
 from matplotlib.colors import ListedColormap
-
 
 #%% open NetCDF files
 
@@ -34,9 +34,9 @@ vol = xr.open_dataset(file_vol, decode_times=False, autoclose=True)
 
 
 # rightmost part of Pacific - near Russia
-mask1 = (dat.lat > 60) & (dat.lat < 70) & (dat.lon > 150)  & (dat.lon < 180)
+mask1 = (dat.lat > 60) & (dat.lat < 65) & (dat.lon > 150)  & (dat.lon < 180)
 # leftmost part of Pacific - near Alaska
-mask2 = (dat.lat > 60) & (dat.lat < 65) & (dat.lon > -180) & (dat.lon < -170)
+mask2 = (dat.lat > 60) & (dat.lat < 65) & (dat.lon > -180) & (dat.lon < -160)
 # areas by Nordic countries
 mask3 = (dat.lat > 60) & (dat.lat < 67) & (dat.lon > 17)   & (dat.lon < 40)
 # Canadian island water & Hudson Bay
@@ -44,16 +44,27 @@ mask4 = (dat.lat > 60) & (dat.lat < 72) & (dat.lon > -130) & (dat.lon < -70)
 
 
 # set colors for mask plotting
-ncm1 = ListedColormap(np.array([0.5,0,0.9]))
+ncm1 = ListedColormap(np.array([0.5,0.5,0.5]))
 ncm2 = ListedColormap(np.array([0,0,0]))
 
 # plot mask over SA data
 mask_plot = mask1 | mask2 | mask3 | mask4
 plt.figure()
-dat.SA.isel(depth=0).plot()
+dat.CT.isel(depth=0).plot()
 mask_plot = mask_plot.where(mask_plot == 1)
 mask_plot.plot(alpha=0.05,cmap=ncm1)
 plt.ylim(60,90)
+
+
+plt.figure()
+globe = dat.CT.isel(depth=0).plot(robust=True,subplot_kws=dict(projection=ccrs.Orthographic(-20, 90), facecolor="white"),transform=ccrs.PlateCarree())
+mask_plot = mask_plot.where(mask_plot == 1)
+mask_plot.plot(alpha=0.025,ax=globe.axes,cmap=ncm1,transform=ccrs.PlateCarree())
+globe.axes.set_global()
+globe.axes.coastlines()
+globe.axes.set_extent([20,200,20,200])
+
+
 
 # filter out data in masking areas
 cond = (~mask1) & (~mask2) & (~mask3) & (~mask4)
