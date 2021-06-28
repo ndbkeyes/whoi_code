@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jun 17 16:37:23 2021
+Created on Mon Jun 28 11:12:54 2021
 
 @author: ndbke
-
 """
 
+
 import numpy as np
-import xarray as xr
 
 
 # univariate / marginal Shannon information entropy
@@ -66,7 +65,7 @@ def J(p1_arr,p2_arr,p_grid):
 
 
 # entropy quantities of vol T-S xarray p_TS
-def entropy(p_TS,disp=False):
+def entropy_all(p_TS,disp=False):
     
     p_TS.values = np.nan_to_num(p_TS.values)
 
@@ -95,48 +94,3 @@ def entropy(p_TS,disp=False):
         print("J(T,S) - dependence metric:\t\t", J(p_T,p_S,p_TS),"\n")
         
     return H1(p_T), H1(p_S), J(p_T,p_S,p_TS)
-
-
-
-
-
-#%%
-
-
-# read in volumetric T-S files
-dat_grn = xr.open_dataset('NetCDFs/tsv_grn.nc', decode_times=False, autoclose=True)
-dat_arc = xr.open_dataset('NetCDFs/tsv_arc.nc', decode_times=False, autoclose=True)
-
-# entropy calcs for entirety of Greenland Sea and Arctic Ocean
-print("grn")
-entropy(dat_grn.volume)
-print("arc")
-entropy(dat_arc.volume)
-
-# condition to get Greenland deep water vs. upper water
-cond = (dat_grn.temperature >= -1.5) & (dat_grn.temperature < 0) & (dat_grn.salinity >= 34.85) & (dat_grn.salinity < 34.95)
-deep = dat_grn.where(cond)
-upper = dat_grn.where(~cond)
-
-# entropy calcs for Greenland deep vs upper
-print("grn - deep")
-deep_H_T, deep_H_S, deep_H_TS = entropy(deep.volume)
-print("grn - upper")
-upper_H_T, upper_H_S, upper_H_TS = entropy(upper.volume)
-
-
-# close NC files
-dat_grn.close()
-dat_arc.close()
-
-
-
-
-
-
-#%%
-
-
-# print("\t\t\t\tH(T)/H(S)\t\t J(T,S)\n\t\t\t\t--------\t\t-------")
-# print("upper water:\t", np.round(upper_H_T / upper_H_S,3), "\t\t\t", upper_H_TS)
-# print("deep water:  \t",np.round(deep_H_T / deep_H_S,3), "\t\t\t", deep_H_TS)

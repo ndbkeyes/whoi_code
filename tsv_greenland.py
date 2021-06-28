@@ -7,35 +7,11 @@ Created on Tue Jun 22 17:21:26 2021
 
 import numpy as np
 import xarray as xr
+
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
-
-
-# wrapper function on pcolormesh to adapt to TSV xarray
-def plot_tsv(xarr,xylabels,corner="UR"):
-    
-    # assuming that coordinates are bins' left/lower edges
-    
-    pltmat = xarr.values
-    
-    # trim xarray's values matrix
-    if corner == "UL":
-        pltmat = pltmat[1:,1:]
-    elif corner == "UR":
-        pltmat = pltmat[1:,0:-1]
-    elif corner == "BR":
-        pltmat = pltmat[0:-1,0:-1]
-    elif corner == "BL":
-        pltmat = pltmat[0:-1,1:]
-    
-        
-    pcm = plt.pcolormesh(xarr.salinity,xarr.temperature,pltmat,norm=colors.LogNorm())
-    cbar = plt.colorbar(pcm)
-    cbar.set_label("volume (km$^3$)")    
-    
-    plt.xlabel(xylabels[0])
-    plt.ylabel(xylabels[1])
+from utils.plot_tsv import plot_tsv
     
     
     
@@ -90,4 +66,3 @@ plt.figure()
 plot_tsv(upper,["salinity","potential temperature"])
 plt.figure()
 plot_tsv(deep,["salinity","potential temperature"])
-
