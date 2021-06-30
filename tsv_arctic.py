@@ -7,11 +7,13 @@ Created on Mon Jun 28 12:00:45 2021
 
 
 import xarray as xr
+import numpy as np
+import matplotlib.pyplot as plt
 from utils.make_tsv import make_tsv
 
 
 
-#%% open NetCDF files
+#%% mask data & make TSV
 
 print("opening & filtering files")
 # open bathymetrically masked data
@@ -43,3 +45,27 @@ vol.close()
 
 # make TSV out of the filtered data
 make_tsv(dat,vol,res=[0.1,0.05],name="arc")
+
+
+
+
+#%% plot profiles from different locations
+
+lat_lower = 60.125
+lat_upper = 88.125
+num_pts = (lat_upper - lat_lower) / 0.25 + 1
+
+lat_arr = np.linspace(lat_lower,lat_upper,int(num_pts))
+lon_arr = np.repeat(168.375,len(lat_arr))
+coord_arr = np.array(list(zip(lat_arr,lon_arr)))
+
+plt.figure()
+for i in range(len(coord_arr)):
+    print(coord_arr[i])
+    prof = dat.sel(lat=coord_arr[i,0],lon=coord_arr[i,1])
+    if coord_arr[i,0] < 75:
+        col = "blue"
+    else:
+        col = "red"
+    plt.plot(prof.salinity, prof.temperature, color=col)
+

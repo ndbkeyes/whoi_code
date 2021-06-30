@@ -12,7 +12,7 @@ import xarray as xr
 import gsw
 import matplotlib.pyplot as plt
 
-from plot_tsv import plot_tsv
+from utils.plot_tsv import plot_tsv
 
 
 
@@ -28,8 +28,11 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],name=""):
     T = dat_TS.CT.values.flatten()
     S = dat_TS.SA.values.flatten()
     V = vol.volume.values.flatten()
+    
+    plt.figure()
+    dat_TS.CT.isel(depth=0).plot()
 
-    # remove NaNs
+    # remove NaNs from arrays
     nan_bool = ~np.isnan(T) & ~np.isnan(S)
     T = T[nan_bool]
     S = S[nan_bool]
@@ -42,8 +45,10 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],name=""):
     # res3: 1, 0.5
     t_increment = res[0]
     s_increment = res[1]
-    T_bins = np.arange(-3,13,t_increment)
-    S_bins = np.arange(22,37,s_increment)
+    T_bins = np.arange(-2,8,t_increment)
+    S_bins = np.arange(32,36,s_increment)
+    
+    print(T_bins)
     
     # bin each T, S value
     T_dig = np.digitize(T,T_bins)
@@ -106,8 +111,8 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],name=""):
     
     ###  volumetric T-S
     plot_tsv(tsv,corner="BR")
-    plt.xlim(np.amin(S_bins),np.amax(S_bins))
-    plt.ylim(np.amin(T_bins),np.amax(T_bins))
+    # plt.xlim(np.amin(S_bins),np.amax(S_bins))
+    # plt.ylim(np.amin(T_bins),np.amax(T_bins))
     
     
     

@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 print("opening data file")
 
-file_t = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/whoi_code/NetCDFs/data.nc'
+file_t = 'C:/Users/ndbke/Dropbox/_NDBK/Research/WHOI/whoi_code/NetCDFs/data_all.nc'
 dat = xr.open_dataset(file_t, decode_times=False, autoclose=True)
 print(dat)
 
@@ -50,10 +50,6 @@ print("finding volumes")
 
 ### LAT ###
 for i in range(0,len(lat)):
-    
-    # mask to Arctic Ocean
-    if lat[i] < 60:
-        continue
 
     print("lat: ",lat[i])
     
@@ -93,7 +89,7 @@ for i in range(0,len(lat)):
 
 
 #%% save volume as NetCDF
-vol.to_netcdf("NetCDFs/volume.nc")
+vol.to_netcdf("../NetCDFs/volume.nc")
 
 
 

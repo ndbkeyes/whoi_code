@@ -1,68 +1,54 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 22 17:21:26 2021
+Created on Mon Jun 28 14:07:56 2021
 
 @author: ndbke
 """
 
-import numpy as np
 import xarray as xr
-
+from utils.make_tsv import make_tsv
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 
-from utils.plot_tsv import plot_tsv
+
+def geog_select(xarr,lims=0):
     
+    if lims == 0:
+        print("error - no bounds given")
+        return 0
     
+    if len(lims['lat']) == 0:
+        lims['lat'] = [-90,90]
+    if len(lims['lon']) == 0:
+        lims['lon'] = [-180,180]
     
+    cond = (xarr.lat >= lims['lat'][0]) & (xarr.lat <= lims['lat'][1]) & (xarr.lon >= lims['lon'][0]) & (xarr.lon <= lims['lon'][1])
+    sel = xarr.where(cond)
+    
+    return sel
+ 
+
+print("opening & filtering files")
+
+# open data
+file_data = 'NetCDFs/data_all.nc'
+dat = xr.open_dataset(file_data, decode_times=False, autoclose=True)
+dat.close()
+
+# open bathymetry mask
+file_bath = 'NetCDFs/bathymetry.nc'
+bath = xr.open_dataset(file_bath, decode_times=False, autoclose=True)
+bath.close()
+
+# open volume matrix
+file_vol = 'NetCDFs/volume.nc'
+vol = xr.open_dataset(file_vol, decode_times=False, autoclose=True)
+vol.close()
 
 
 
-# read in CSV file
-grn_tsv = np.genfromtxt("../data/tsv_grn_summer.csv", delimiter=',')
+# filter data by location and bathymetry
+dat = geog_select(dat, {'lat': [70,80], 'lon': [-20,15]})
+dat = dat.where(bath.bath_mask)
 
-# get T and S coordinates
-T_bins = grn_tsv[1:,0]
-S_bins = grn_tsv[0,1:]
-
-print(T_bins)
-print(S_bins)
-
-# trim T, S coordinates out of data matrix
-grn_tsv = grn_tsv[1:,1:]
-
-
-# plot volumetric T-S
-# can't use xr.plot() because it doesn't let you do binning correctly
-grn_trim = grn_tsv[1:,0:-1]     # reduced dimensionality to plot w/ bin edges
-pcm = plt.pcolormesh(S_bins,T_bins,grn_trim,norm=colors.LogNorm())
-cbar = plt.colorbar(pcm)
-cbar.set_label("volume (km$^3$)")
-plt.xlabel("salinity (o/oo)")
-plt.ylabel("potential temperature (Celsius)")
-plt.title("Carmack & Aagard - Volumetric T-S plot for Greenland Sea")
-plt.xlim(33.75,np.amax(S_bins))
-plt.ylim(np.amin(T_bins),np.amax(T_bins))
-
-
-# save as DataArray & NetCDF
-tsv = xr.DataArray( grn_tsv , coords=[T_bins,S_bins], dims=["temperature","salinity"])
-tsv.name = "volume"
-tsv.to_netcdf("NetCDFs/tsv_grn.nc")
-tsv.close()
-
-
-
-
-
-#%% select different water masses
-
-# make and apply condition on coords
-cond = (tsv.temperature >= -1.5) & (tsv.temperature < 0) & (tsv.salinity >= 34.85) & (tsv.salinity < 34.95)
-deep = tsv.where(cond)
-upper = tsv.where(~cond)
-
-plt.figure()
-plot_tsv(upper,["salinity","potential temperature"])
-plt.figure()
-plot_tsv(deep,["salinity","potential temperature"])
+# make vol T-S
+make_tsv(dat,vol,res=[0.1,0.05],name="grn")
