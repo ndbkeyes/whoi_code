@@ -27,9 +27,9 @@ cmk_data = cmk_data[1:,1:]
 
 
 # save as DataArray & NetCDF
-tsv_cmk = xr.DataArray( cmk_data , coords=[T_bins,S_bins], dims=["temperature","salinity"])
+tsv_cmk = xr.DataArray( cmk_data , coords=[T_bins,S_bins], dims=["t","s"])
 tsv_cmk.name = "volume"
-tsv_cmk.to_netcdf("NetCDFs/tsv_grn.nc")
+tsv_cmk.to_netcdf("NetCDFs/tsv_cmk.nc")
 tsv_cmk.close()
 
 # plot volumetric T-S
@@ -41,7 +41,7 @@ plot_tsv(tsv_cmk,xylabels=["salinity","potential temperature"])
 #%% select different water masses
 
 # make and apply condition on T, S coords
-cond = (tsv_cmk.temperature >= -1.5) & (tsv_cmk.temperature < 0) & (tsv_cmk.salinity >= 34.85) & (tsv_cmk.salinity < 34.95)
+cond = (tsv_cmk.t >= -1.5) & (tsv_cmk.t < 0) & (tsv_cmk.s >= 34.85) & (tsv_cmk.s < 34.95)
 deep = tsv_cmk.where(cond)
 upper = tsv_cmk.where(~cond)
 

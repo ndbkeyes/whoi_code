@@ -12,7 +12,7 @@ import numpy as np
 
 
 # wrapper function on pcolormesh to adapt to TSV xarray
-def plot_tsv(xarr,xylabels=["absolute salinity (g/kg)","conservative temperature (C)"],corner="BR"):
+def plot_tsv(xarr,xylabels=["s","t"],corner="BR"):
     
     # assuming that coordinates are bins' left/lower edges
     

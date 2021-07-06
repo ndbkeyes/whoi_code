@@ -108,7 +108,10 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name="",convert=Tru
     
     
     ###  volumetric T-S
-    plot_tsv(tsv,corner="BR")
+    if convert:
+        plot_tsv(tsv,xylabels=["absolute salinity (g/kg)","conservative temperature (C)"],corner="BR")
+    else:
+        plot_tsv(tsv,xylabels=["salinity (o/oo)","potential temperature (C)"],corner="BR")
     
     
     #%% save TSV to NetCDF

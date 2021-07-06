@@ -10,7 +10,7 @@ import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 from utils.make_tsv import make_tsv
-
+# import cartopy.crs as ccrs
 
 
 #%% mask data & make TSV
@@ -18,7 +18,7 @@ from utils.make_tsv import make_tsv
 print("opening & filtering files")
 
 file_data = 'NetCDFs/data_all.nc'
-dat = xr.open_dataset(file_data, decode_times=False, autoclose=True)
+dat_arc = xr.open_dataset(file_data, decode_times=False, autoclose=True)
 file_bath = 'NetCDFs/bathymetry.nc'
 bath = xr.open_dataset(file_bath, decode_times=False, autoclose=True)
 file_vol = 'NetCDFs/volume.nc'
@@ -26,31 +26,42 @@ vol = xr.open_dataset(file_vol, decode_times=False, autoclose=True)
 
 
 # filter to Arctic Circle and to 200m isobath
-dat = dat.where(dat.lat >= 60)
-dat = dat.where(bath.bath_mask)
+dat_arc = dat_arc.where(dat_arc.lat >= 60)
+dat_arc = dat_arc.where(bath.bath_mask)
 
 
 # rightmost part of Pacific - near Russia
-mask1 = (dat.lat > 60) & (dat.lat < 65) & (dat.lon > 150)  & (dat.lon < 180)
+mask1 = (dat_arc.lat > 60) & (dat_arc.lat < 65) & (dat_arc.lon > 150)  & (dat_arc.lon < 180)
 # leftmost part of Pacific - near Alaska
-mask2 = (dat.lat > 60) & (dat.lat < 65) & (dat.lon > -180) & (dat.lon < -160)
-# areas by Nordic countries
-mask3 = (dat.lat > 60) & (dat.lat < 67) & (dat.lon > 17)   & (dat.lon < 40)
+mask2 = (dat_arc.lat > 60) & (dat_arc.lat < 65) & (dat_arc.lon > -180) & (dat_arc.lon < -160)
+# inland area by Nordic countries
+mask3 = (dat_arc.lat > 60) & (dat_arc.lat < 67) & (dat_arc.lon > 17)   & (dat_arc.lon < 40)
 # Canadian island water & Hudson Bay
-mask4 = (dat.lat > 60) & (dat.lat < 72) & (dat.lon > -130) & (dat.lon < -70)
-
+mask4 = (dat_arc.lat > 60) & (dat_arc.lat < 72) & (dat_arc.lon > -130) & (dat_arc.lon < -70)
+# Norwegian coastal area
+mask5 = (dat_arc.lat > 60) & (dat_arc.lat < 72) & (dat_arc.lon > 2) & (dat_arc.lon < 40)
 
 # filter out data in masking areas
-cond = (~mask1) & (~mask2) & (~mask3) & (~mask4)
-dat["CT"] = dat.CT.where( cond )
-dat["SA"] = dat.SA.where( cond )
+cond = (~mask1) & (~mask2) & (~mask3) & (~mask4) & (~mask5)
+dat_arc = dat_arc.where( cond )
+dat_arc = dat_arc.where( cond )
 
-dat.close()
+dat_arc.close()
 vol.close()
+
+# # plot masked areas over map
+# mask_plot = mask1 | mask2 | mask3 | mask4 | mask5
+# plt.figure()
+# globe = dat_arc.CT.isel(depth=0).plot(robust=True,subplot_kws=dict(projection=ccrs.Orthographic(-20, 90), facecolor="white"),transform=ccrs.PlateCarree())
+# mask_plot = mask_plot.where(mask_plot == 1)
+# mask_plot.plot(alpha=0.025,ax=globe.axes,transform=ccrs.PlateCarree())
+# globe.axes.set_global()
+# globe.axes.coastlines()
+# globe.axes.set_extent([20,200,20,200])
 
 
 # make TSV out of the filtered data
-make_tsv(dat,vol,res=[0.1,0.05],tsbounds=[-2,12,22,36],name="arc")
+make_tsv(dat_arc,vol,res=[0.1,0.05],tsbounds=[-3,12,22,36],name="arc",convert=False)
 
 
 
@@ -68,7 +79,7 @@ coord_arr = np.array(list(zip(lat_arr,lon_arr)))
 plt.figure()
 for i in range(len(coord_arr)):
     print(coord_arr[i])
-    prof = dat.sel(lat=coord_arr[i,0],lon=coord_arr[i,1])
+    prof = dat_arc.sel(lat=coord_arr[i,0],lon=coord_arr[i,1])
     if coord_arr[i,0] < 75:
         col = "blue"
     else:
@@ -77,4 +88,4 @@ for i in range(len(coord_arr)):
 
 plt.xlabel("SA")
 plt.ylabel("CT")
-plt.title("Individual Arctic T-S profiles along 0 longitude")
+plt.title("Individual Arctic T-S profiles along 0 deg. longitude")
