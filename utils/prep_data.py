@@ -43,7 +43,7 @@ def prep_data(latlon_bounds=[-90,90,-180,180],name="all"):
     
     
 
-    # make dataset with T, S for Arctic Ocean only
+    # make dataset with in-situ T, S
     dataset = xr.Dataset(
         {
             "temperature": dat_t,

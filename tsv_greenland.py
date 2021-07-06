@@ -8,10 +8,9 @@ Created on Mon Jun 28 14:07:56 2021
 import xarray as xr
 from utils.make_tsv import make_tsv
 from utils.entropy import entropy_all
-import matplotlib.pyplot as plt
 
 
-def geog_select(xarr,lims=0):
+def geog_rect(xarr,lims=0):
     
     if lims == 0:
         print("error - no bounds given")
@@ -48,11 +47,11 @@ vol = xr.open_dataset(file_vol, decode_times=False, autoclose=True)
 vol.close()
 
 # filter data by location and bathymetry
-dat = geog_select(dat, {'lat': [70,80], 'lon': [-20,15]})
+dat = geog_rect(dat, {'lat': [70,80], 'lon': [-20,15]})
 dat = dat.where(bath.bath_mask)
 
 # make vol T-S from WOA
-tsv_grn = make_tsv(dat,vol,res=[0.5,0.05],tsbounds=[-2,8,32,35.5],name="grn")
+tsv_grn = make_tsv(dat,vol,res=[0.5,0.05],tsbounds=[-2,8,32,35.5],name="grn",convert=False)
 
 
 

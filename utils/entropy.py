@@ -55,7 +55,7 @@ def Hc(p_arr,p_grid):
 
 
 
-
+# joint Shannon information entropy
 def J(p1_arr,p2_arr,p_grid):
     
     J = H1(p1_arr) + H1(p2_arr) - H2(p_grid)
@@ -66,13 +66,12 @@ def J(p1_arr,p2_arr,p_grid):
 # entropy quantities of vol T-S xarray p_TS
 def entropy_all(p_TS,disp=False):
     
+    # set NaN values to zero
     p_TS.values = np.nan_to_num(p_TS.values)
 
     # get totals by T and S classes separately
-    
     tdim = p_TS.dims[0]
     sdim = p_TS.dims[1]
-    
     p_T = p_TS.sum(sdim)
     p_S = p_TS.sum(tdim)
     
@@ -82,7 +81,7 @@ def entropy_all(p_TS,disp=False):
     p_T = p_T / V_total
     p_S = p_S / V_total
     
-    
+    # print results if desired
     if disp:
         print("H(T) - marginal entropy:\t\t",H1(p_T))
         print("H(S) - marginal entropy:\t\t",H1(p_S))

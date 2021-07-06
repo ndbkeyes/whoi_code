@@ -17,16 +17,20 @@ from utils.plot_tsv import plot_tsv
 
 
 
-def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name=""):
+def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name="",convert=True):
     
     #%% create V matrix by T, S
     
     print("binning T, S")
     
-    
     # flatten all three arrays into 1D
-    T = dat_TS.CT.values.flatten()
-    S = dat_TS.SA.values.flatten()
+    if convert:
+        T = dat_TS.CT.values.flatten()
+        S = dat_TS.SA.values.flatten()
+    else:
+        T = dat_TS.temperature.values.flatten()
+        S = dat_TS.salinity.values.flatten()
+    
     V = vol.volume.values.flatten()
     
     # # plot data at 200m depth
@@ -39,16 +43,9 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name=""):
     S = S[nan_bool]
     V = V[nan_bool]
     
-    # make T-S bins
-    
-    # res1: 0.1, 0.05
-    # res2: 0.5, 0.25
-    # res3: 1, 0.5
-
+    # make T-S bins using inputted params
     T_bins = np.arange(tsbounds[0],tsbounds[1]+res[0],res[0])
     S_bins = np.arange(tsbounds[2],tsbounds[3]+res[1],res[1])
-    
-    print(T_bins)
     
     # bin each T, S value
     T_dig = np.digitize(T,T_bins)
@@ -60,7 +57,6 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name=""):
     
     
     #%% fill V matrix
-    
     print("filling V matrix")
     
     ### add up volumes for each T-S state
@@ -79,7 +75,9 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name=""):
     V_matrix[V_matrix == 0] = np.nan
     
     # make TSV into a DataArray
-    tsv = xr.DataArray( V_matrix, coords=[T_bins,S_bins], dims=["temperature","salinity"])
+    tsv = xr.DataArray( V_matrix, coords=[T_bins,S_bins], dims=["t","s"])
+    tsv.name = "volume"
+    #*** note that for some reason we can't use uppercase T as a dim - may already have some xarray use???
     
     
     #%% PLOTTING
@@ -117,9 +115,7 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name=""):
     
     print("saving")
     plt.savefig(f"../plots/tsv_{'name'}.png",dpi=200)
-    tsv = xr.DataArray( V_matrix , coords=[T_bins,S_bins], dims=["T","S"])
-    tsv.name = "volume"
-    tsv.to_netcdf("NetCDFs/tsv_arc.nc")
+    tsv.to_netcdf(f"NetCDFs/tsv_{'name'}.nc")
     tsv.close()
     
     
