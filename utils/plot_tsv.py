@@ -8,6 +8,7 @@ Created on Mon Jun 28 10:56:00 2021
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+import numpy as np
 
 
 # wrapper function on pcolormesh to adapt to TSV xarray
@@ -34,3 +35,7 @@ def plot_tsv(xarr,xylabels=["absolute salinity (g/kg)","conservative temperature
     
     plt.xlabel(xylabels[0])
     plt.ylabel(xylabels[1])
+    plt.xlim(np.amin(xarr.coords["salinity"]),np.amax(xarr.coords["salinity"]))
+    plt.ylim(np.amin(xarr.coords["temperature"]),np.amax(xarr.coords["temperature"]))
+    
+    

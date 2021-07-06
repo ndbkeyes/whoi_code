@@ -17,7 +17,7 @@ from utils.plot_tsv import plot_tsv
 
 
 
-def make_tsv(dat_TS,vol,res=[0.5,0.25],name=""):
+def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name=""):
     
     #%% create V matrix by T, S
     
@@ -29,8 +29,9 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],name=""):
     S = dat_TS.SA.values.flatten()
     V = vol.volume.values.flatten()
     
-    plt.figure()
-    dat_TS.CT.isel(depth=0).plot()
+    # # plot data at 200m depth
+    # plt.figure()
+    # dat_TS.CT.isel(depth=24).plot()
 
     # remove NaNs from arrays
     nan_bool = ~np.isnan(T) & ~np.isnan(S)
@@ -43,10 +44,9 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],name=""):
     # res1: 0.1, 0.05
     # res2: 0.5, 0.25
     # res3: 1, 0.5
-    t_increment = res[0]
-    s_increment = res[1]
-    T_bins = np.arange(-2,8,t_increment)
-    S_bins = np.arange(32,36,s_increment)
+
+    T_bins = np.arange(tsbounds[0],tsbounds[1]+res[0],res[0])
+    S_bins = np.arange(tsbounds[2],tsbounds[3]+res[1],res[1])
     
     print(T_bins)
     
@@ -89,7 +89,7 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],name=""):
     
     
     ### isopycnals
-    # make empty array with coordinates of CT and SA
+    # empty array with coordinates of CT and SA
     pot_dens = xr.DataArray(np.zeros((len(S_bins),len(T_bins))), coords=[S_bins,T_bins], dims=["SA","CT"] )
     # fill matrix with GSW potential density values
     pot_dens.values = gsw.sigma0( pot_dens.SA, pot_dens.CT )
@@ -101,7 +101,7 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],name=""):
     
     
     ### freezing line
-    # make empty array with coordinates of SA only
+    # empty array with coordinates of SA only
     freeze_pt = xr.DataArray( np.zeros((len(S_bins))), coords=[S_bins], dims=["SA"] )
     # fill array with GSW freezing point values
     freeze_pt.values = gsw.CT_freezing(freeze_pt.SA, 0, 0)
@@ -111,13 +111,6 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],name=""):
     
     ###  volumetric T-S
     plot_tsv(tsv,corner="BR")
-    # plt.xlim(np.amin(S_bins),np.amax(S_bins))
-    # plt.ylim(np.amin(T_bins),np.amax(T_bins))
-    
-    
-    
-    
-    
     
     
     #%% save TSV to NetCDF
@@ -128,3 +121,6 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],name=""):
     tsv.name = "volume"
     tsv.to_netcdf("NetCDFs/tsv_arc.nc")
     tsv.close()
+    
+    
+    return tsv

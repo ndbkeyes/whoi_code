@@ -9,46 +9,51 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from utils.plot_tsv import plot_tsv
+from utils.entropy import entropy_all
     
     
     
 #%%
 
 # read in CSV file
-grn_tsv = np.genfromtxt("../data/tsv_grn_summer.csv", delimiter=',')
+cmk_data = np.genfromtxt("../data/tsv_grn_summer.csv", delimiter=',')
 
 # get T and S coordinates
-T_bins = grn_tsv[1:,0]
-S_bins = grn_tsv[0,1:]
+T_bins = cmk_data[1:,0]
+S_bins = cmk_data[0,1:]
 
-print(T_bins)
-print(S_bins)
-
-# trim T, S coordinates out of data matrix
-grn_tsv = grn_tsv[1:,1:]
+# trim T, S coordinate col/row out of data matrix
+cmk_data = cmk_data[1:,1:]
 
 
 # save as DataArray & NetCDF
-tsv = xr.DataArray( grn_tsv , coords=[T_bins,S_bins], dims=["temperature","salinity"])
-tsv.name = "volume"
-tsv.to_netcdf("NetCDFs/tsv_grn.nc")
-tsv.close()
+tsv_cmk = xr.DataArray( cmk_data , coords=[T_bins,S_bins], dims=["temperature","salinity"])
+tsv_cmk.name = "volume"
+tsv_cmk.to_netcdf("NetCDFs/tsv_grn.nc")
+tsv_cmk.close()
 
 # plot volumetric T-S
 plt.figure()
-plot_tsv(tsv,xylabels=["salinity","potential temperature"])
+plot_tsv(tsv_cmk,xylabels=["salinity","potential temperature"])
 
 
 
 #%% select different water masses
 
 # make and apply condition on T, S coords
-cond = (tsv.temperature >= -1.5) & (tsv.temperature < 0) & (tsv.salinity >= 34.85) & (tsv.salinity < 34.95)
-deep = tsv.where(cond)
-upper = tsv.where(~cond)
+cond = (tsv_cmk.temperature >= -1.5) & (tsv_cmk.temperature < 0) & (tsv_cmk.salinity >= 34.85) & (tsv_cmk.salinity < 34.95)
+deep = tsv_cmk.where(cond)
+upper = tsv_cmk.where(~cond)
 
 # plot upper and lower water masses on T-S
 plt.figure()
 plot_tsv(upper,xylabels=["salinity","potential temperature"])
 plt.figure()
 plot_tsv(deep,xylabels=["salinity","potential temperature"])
+
+
+
+
+#%% entropy calculations
+
+entropy_all(tsv_cmk,disp=True)

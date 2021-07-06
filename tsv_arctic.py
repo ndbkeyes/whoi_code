@@ -16,12 +16,18 @@ from utils.make_tsv import make_tsv
 #%% mask data & make TSV
 
 print("opening & filtering files")
-# open bathymetrically masked data
-file_bath = 'NetCDFs/data_isobath.nc'
-dat = xr.open_dataset(file_bath, decode_times=False, autoclose=True)
-# open volume matrix
+
+file_data = 'NetCDFs/data_all.nc'
+dat = xr.open_dataset(file_data, decode_times=False, autoclose=True)
+file_bath = 'NetCDFs/bathymetry.nc'
+bath = xr.open_dataset(file_bath, decode_times=False, autoclose=True)
 file_vol = 'NetCDFs/volume.nc'
 vol = xr.open_dataset(file_vol, decode_times=False, autoclose=True)
+
+
+# filter to Arctic Circle and to 200m isobath
+dat = dat.where(dat.lat >= 60)
+dat = dat.where(bath.bath_mask)
 
 
 # rightmost part of Pacific - near Russia
@@ -44,7 +50,7 @@ vol.close()
 
 
 # make TSV out of the filtered data
-make_tsv(dat,vol,res=[0.1,0.05],name="arc")
+make_tsv(dat,vol,res=[0.1,0.05],tsbounds=[-2,12,22,36],name="arc")
 
 
 
@@ -56,7 +62,7 @@ lat_upper = 88.125
 num_pts = (lat_upper - lat_lower) / 0.25 + 1
 
 lat_arr = np.linspace(lat_lower,lat_upper,int(num_pts))
-lon_arr = np.repeat(168.375,len(lat_arr))
+lon_arr = np.repeat(0.125,len(lat_arr))
 coord_arr = np.array(list(zip(lat_arr,lon_arr)))
 
 plt.figure()
@@ -69,3 +75,6 @@ for i in range(len(coord_arr)):
         col = "red"
     plt.plot(prof.salinity, prof.temperature, color=col)
 
+plt.xlabel("SA")
+plt.ylabel("CT")
+plt.title("Individual Arctic T-S profiles along 0 longitude")

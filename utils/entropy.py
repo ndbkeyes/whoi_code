@@ -28,7 +28,6 @@ def H1(p_arr):
 # bivariate / joint Shannon information entropy
 def H2(p_grid):
     
-    
     dim = p_grid.shape
     T_dim = dim[0]
     S_dim = dim[1]
@@ -93,4 +92,4 @@ def entropy_all(p_TS,disp=False):
         print("H_T(S) - conditional entropy:\t",Hc(p_T,p_TS))
         print("J(T,S) - dependence metric:\t\t", J(p_T,p_S,p_TS),"\n")
         
-    return H1(p_T), H1(p_S), J(p_T,p_S,p_TS)
+    return H1(p_T), H1(p_S), H2(p_TS), J(p_T,p_S,p_TS)
