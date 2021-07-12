@@ -7,6 +7,7 @@ Created on Mon Jun 28 11:12:54 2021
 
 
 import numpy as np
+from scipy import optimize
 
 
 # univariate / marginal Shannon information entropy
@@ -92,3 +93,47 @@ def entropy_all(p_TS,disp=False):
         print("J(T,S) - dependence metric:\t\t", J(p_T,p_S,p_TS),"\n")
         
     return H1(p_T), H1(p_S), H2(p_TS), J(p_T,p_S,p_TS)
+
+
+
+
+
+def f(y,T,Tavg):
+     
+    T1 = T[0]
+    Tarr = T[1:]
+    return (Tavg - T1) + np.sum( (Tavg - Tarr) * y**(Tarr - T1) )
+
+
+def fp1(y,T,Tavg):
+    
+    T1 = T[0]
+    Tarr = T[1:]    
+    return np.sum( (Tavg - Tarr) * (Tarr - T1) * y**(Tarr - T1 - 1) )
+
+
+def fp2(y,T,Tavg):
+    
+    T1 = T[0]
+    Tarr = T[1:]    
+    return np.sum( (Tavg - Tarr) * (Tarr - T1) * (Tarr - T1 - 1) * y**(Tarr - T1 - 2) )
+        
+
+
+def max_ent(T,Tavg):
+   
+    y = optimize.newton(f, x0=1, fprime=fp1, fprime2=fp2, args=(T,Tavg))
+    beta = -np.log(y)
+    alpha = np.log( np.sum( np.exp(-beta * T) ) )
+    
+    p_arr = np.empty((len(T),1))
+    for i in range(0,len(T)):
+        p_arr[i] = np.exp( -alpha - beta * T[i] )
+    p_arr /= np.sum(p_arr)
+    
+    Hpmax = alpha + beta*Tavg
+    
+    
+    print(f"beta = {np.round(beta,4)}, alpha = {np.round(alpha,4)}")
+    print(np.round(p_arr,4))
+    print(Hpmax)

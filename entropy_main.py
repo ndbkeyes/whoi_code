@@ -8,7 +8,8 @@ Created on Thu Jun 17 16:37:23 2021
 
 
 import xarray as xr
-from utils.entropy import entropy_all
+import numpy as np
+from utils.entropy import entropy_all, max_ent
 
 
 
@@ -53,3 +54,20 @@ dat_arc.close()
 # print("\t\t\t\tH(T)/H(S)\t\t J(T,S)\n\t\t\t\t--------\t\t-------")
 # print("upper water:\t", np.round(upper_H_T / upper_H_S,3), "\t\t\t", upper_H_TS)
 # print("deep water:  \t",np.round(deep_H_T / deep_H_S,3), "\t\t\t", deep_H_TS)
+
+
+
+
+#%%
+
+
+# file_data = 'NetCDFs/tsv_arc.nc'
+# dat_arc = xr.open_dataset(file_data, decode_times=False, autoclose=True)
+
+# T = dat_arc.t
+# print(T)
+
+    
+T = np.array([-1.25, -0.75, -0.25])
+Tavg = -0.96
+max_ent(T,Tavg)
