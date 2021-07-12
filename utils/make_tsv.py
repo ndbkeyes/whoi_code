@@ -17,7 +17,7 @@ from utils.plot_tsv import plot_tsv
 
 
 
-def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name="",convert=True):
+def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name="",convert=False):
     
     #%% create V matrix by T, S
     
@@ -46,6 +46,7 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name="",convert=Tru
     # make T-S bins using inputted params
     T_bins = np.arange(tsbounds[0],tsbounds[1]+res[0],res[0])
     S_bins = np.arange(tsbounds[2],tsbounds[3]+res[1],res[1])
+    
     
     # bin each T, S value
     T_dig = np.digitize(T,T_bins)
@@ -109,17 +110,21 @@ def make_tsv(dat_TS,vol,res=[0.5,0.25],tsbounds=[-2,8,32,36],name="",convert=Tru
     
     ###  volumetric T-S
     if convert:
-        plot_tsv(tsv,xylabels=["absolute salinity (g/kg)","conservative temperature (C)"],corner="BR")
+        plot_tsv(tsv,xylabels=["absolute salinity (g/kg)","conservative temperature (C)"])
     else:
-        plot_tsv(tsv,xylabels=["salinity (o/oo)","potential temperature (C)"],corner="BR")
+        plot_tsv(tsv,xylabels=["salinity (o/oo)","potential temperature (C)"])
     
     
     #%% save TSV to NetCDF
     
     print("saving")
-    plt.savefig(f"../plots/tsv_{'name'}.png",dpi=200)
-    tsv.to_netcdf(f"NetCDFs/tsv_{'name'}.nc")
+    
+    figname = "../plots/tsv_" + name + ".png"
+    ncname = "NetCDFs/tsv_" + name + ".nc"
+    plt.savefig(figname,dpi=200)
+    tsv.to_netcdf(ncname)
     tsv.close()
     
+    print(tsv)
     
     return tsv

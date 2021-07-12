@@ -12,7 +12,7 @@ import numpy as np
 
 
 # wrapper function on pcolormesh to adapt to TSV xarray
-def plot_tsv(xarr,xylabels=["s","t"],corner="BR"):
+def plot_tsv(xarr,xylabels=["s","t"],corner="BR",norm="log"):
     
     # assuming that coordinates are bins' left/lower edges
     
@@ -29,7 +29,13 @@ def plot_tsv(xarr,xylabels=["s","t"],corner="BR"):
         pltmat = pltmat[0:-1,1:]
     
     # 2D colorplot with colorbar    
-    pcm = plt.pcolormesh(xarr.s,xarr.t,pltmat,norm=colors.LogNorm(),cmap="YlOrRd")
+    pcm = plt.pcolormesh(xarr.s,xarr.t,pltmat,cmap="YlOrRd")
+    if norm == "log":
+        pcm.norm = colors.LogNorm()
+        plt.clim(1,10**6)
+    elif norm == "log_signed":
+        pcm.norm = colors.LogNorm()
+        plt.clim(10**-4,10**4)
     cbar = plt.colorbar(pcm)
     cbar.set_label("volume (km$^3$)")    
     

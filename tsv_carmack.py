@@ -19,11 +19,13 @@ from utils.entropy import entropy_all
 cmk_data = np.genfromtxt("../data/tsv_grn_summer.csv", delimiter=',')
 
 # get T and S coordinates
-T_bins = cmk_data[1:,0]
+T_bins = np.flip(cmk_data[1:,0])
 S_bins = cmk_data[0,1:]
 
 # trim T, S coordinate col/row out of data matrix
-cmk_data = cmk_data[1:,1:]
+cmk_data = np.flipud(cmk_data[1:,1:])
+
+
 
 
 # save as DataArray & NetCDF
@@ -35,6 +37,14 @@ tsv_cmk.close()
 # plot volumetric T-S
 plt.figure()
 plot_tsv(tsv_cmk,xylabels=["salinity","potential temperature"])
+
+
+
+# save figure and netcdf
+plt.savefig("../plots/tsv_cmk.png",dpi=200)
+tsv_cmk.to_netcdf("NetCDFs/tsv_cmk.nc")
+tsv_cmk.close()
+
 
 
 
@@ -53,7 +63,12 @@ plot_tsv(deep,xylabels=["salinity","potential temperature"])
 
 
 
-
 #%% entropy calculations
 
+print("ALL - CMK")
 entropy_all(tsv_cmk,disp=True)
+
+print("DEEP CMK")
+entropy_all(deep,disp=True)
+print("UPPER CMK")
+entropy_all(upper,disp=True)
