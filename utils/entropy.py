@@ -161,5 +161,21 @@ def max_ent1(X,Xavg):
 
 
 
-
+def max_ent2(X,Xavg, Y,Yavg):
+    
+    # solve polynomial equations
+    root_x = optimize.newton(f, x0=1, fprime=fp1, fprime2=fp2, args=(X,Xavg))
+    root_y = optimize.newton(f, x0=1, fprime=fp1, fprime2=fp2, args=(Y,Yavg))
+    
+    # beta, gamma, alpha from roots
+    beta = -np.log(root_x)
+    gamma = -np.log(root_y)
+    alpha = np.log( np.sum( np.exp(-beta * X - gamma * Y) ) )
+    
+    # max-entropy probability distribution
+    p_arr = np.empty((len(X),len(Y)))
+    for i in range(0,len(X)):
+        for j in range(0,len(Y)):
+            p_arr[i,j] = np.exp( -alpha - beta * X[i] - gamma * Y[i] )
+    p_arr /= np.sum(p_arr)
     
