@@ -8,19 +8,22 @@ Created on Mon Jun 28 11:12:54 2021
 
 import numpy as np
 from scipy import optimize
+import xarray as xr
 
 
 # univariate / marginal Shannon information entropy
 def H1(p_arr):
     
     H = 0
-    
     for p in p_arr:
         if p != 0:
             H += p * np.log2(p)
-            
     H *= -1
-    H = np.round(H.values,3)
+    
+    if isinstance(p_arr,xr.core.dataarray.DataArray):
+        H = np.round(H.values[0],3)
+    else:
+        H = np.round(H,3)
     
     return H
     
@@ -41,7 +44,11 @@ def H2(p_grid):
                 H += p * np.log2(p)
     
     H *= -1
-    H = np.round(H.values,3)
+    
+    if isinstance(p_grid,xr.core.dataarray.DataArray):
+        H = np.round(H.values[0],4)
+    else:
+        H = np.round(H,4)
     
     return H
     
@@ -51,7 +58,7 @@ def Hc(p_arr,p_grid):
     
     H = H2(p_grid) - H1(p_arr)
     
-    return np.round(H,3)
+    return np.round(H,4)
 
 
 
@@ -98,42 +105,61 @@ def entropy_all(p_TS,disp=False):
 
 
 
-def f(y,T,Tavg):
-     
-    T1 = T[0]
-    Tarr = T[1:]
-    return (Tavg - T1) + np.sum( (Tavg - Tarr) * y**(Tarr - T1) )
 
+# maximization constraint polynomial to solve for Lagrange mults & max prob dist
+def f(y,X,Xavg):
+    X1 = X[0]
+    Xarr = X[1:]
+    return (Xavg - X1) + np.sum( (Xavg - Xarr) * y**(Xarr - X1) )
 
-def fp1(y,T,Tavg):
-    
-    T1 = T[0]
-    Tarr = T[1:]    
-    return np.sum( (Tavg - Tarr) * (Tarr - T1) * y**(Tarr - T1 - 1) )
+# max constraint polynomial's derivative
+def fp1(y,X,Xavg):
+    X1 = X[0]
+    Xarr = X[1:]    
+    return np.sum( (Xavg - Xarr) * (Xarr - X1) * y**(Xarr - X1 - 1) )
 
-
-def fp2(y,T,Tavg):
-    
-    T1 = T[0]
-    Tarr = T[1:]    
-    return np.sum( (Tavg - Tarr) * (Tarr - T1) * (Tarr - T1 - 1) * y**(Tarr - T1 - 2) )
+# max constraint polynomial's second derivative
+def fp2(y,X,Xavg):
+    X1 = X[0]
+    Xarr = X[1:]    
+    return np.sum( (Xavg - Xarr) * (Xarr - X1) * (Xarr - X1 - 1) * y**(Xarr - X1 - 2) )
         
 
 
-def max_ent(T,Tavg):
+# maximum possible entropy for n states (uniform probability!)
+def Hmax(n):
+    return np.round(np.log2(n),4)
+
+
+
+# univariate constrained entropy maximization
+def max_ent1(X,Xavg):
    
-    y = optimize.newton(f, x0=1, fprime=fp1, fprime2=fp2, args=(T,Tavg))
-    beta = -np.log(y)
-    alpha = np.log( np.sum( np.exp(-beta * T) ) )
+    # solve polynomial equation
+    root = optimize.newton(f, x0=1, fprime=fp1, fprime2=fp2, args=(X,Xavg))
     
-    p_arr = np.empty((len(T),1))
-    for i in range(0,len(T)):
-        p_arr[i] = np.exp( -alpha - beta * T[i] )
+    # beta, alpha from root
+    beta = -np.log(root)
+    alpha = np.log( np.sum( np.exp(-beta * X) ) )
+    
+    # max-entropy probability distribution
+    p_arr = np.empty((len(X),1))
+    for i in range(0,len(X)):
+        p_arr[i] = np.exp( -alpha - beta * X[i] )
     p_arr /= np.sum(p_arr)
     
-    Hpmax = alpha + beta*Tavg
+    # maximum constrainted entropy value 
+    Hp_max = H1(p_arr)
+    H_max = Hmax(len(X))
     
-    
+    # print & return values
     print(f"beta = {np.round(beta,4)}, alpha = {np.round(alpha,4)}")
     print(np.round(p_arr,4))
-    print(Hpmax)
+    print(Hp_max)
+    print(H_max)
+    return alpha, beta, p_arr, Hp_max, H_max
+
+
+
+
+    

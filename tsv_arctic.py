@@ -19,11 +19,14 @@ print("opening & filtering files")
 
 file_data = 'NetCDFs/data_all.nc'
 dat_arc = xr.open_dataset(file_data, decode_times=False, autoclose=True)
+dat_arc.close()
+
 file_bath = 'NetCDFs/bathymetry.nc'
 bath = xr.open_dataset(file_bath, decode_times=False, autoclose=True)
+bath.close()
+
 file_vol = 'NetCDFs/volume.nc'
 vol = xr.open_dataset(file_vol, decode_times=False, autoclose=True)
-dat_arc.close()
 vol.close()
 
 
@@ -45,8 +48,8 @@ mask2 = (dat_arc.lat > 60) & (dat_arc.lat < 65) & (dat_arc.lon > -180) & (dat_ar
 mask3 = (dat_arc.lat > 60) & (dat_arc.lat < 67) & (dat_arc.lon > 17)   & (dat_arc.lon < 40)
 # Canadian island water & Hudson Bay
 mask4 = (dat_arc.lat > 60) & (dat_arc.lat < 72) & (dat_arc.lon > -130) & (dat_arc.lon < -70)
-# Norwegian coastal area
-mask5 = (dat_arc.lat > 60) & (dat_arc.lat < 72) & (dat_arc.lon > 2) & (dat_arc.lon < 40)
+# # Norwegian coastal area
+# mask5 = (dat_arc.lat > 60) & (dat_arc.lat < 72) & (dat_arc.lon > 2) & (dat_arc.lon < 40)
 
 
 
@@ -58,7 +61,7 @@ mask5 = (dat_arc.lat > 60) & (dat_arc.lat < 72) & (dat_arc.lon > 2) & (dat_arc.l
 
 
 # plot masked areas over map
-mask_plot = mask1 | mask2 | mask3 | mask4 | mask5
+mask_plot = mask1 | mask2 | mask3 | mask4  #| mask5
 plt.figure()
 globe = dat_arc.pot_temp.isel(depth=0).plot(robust=True,subplot_kws=dict(projection=ccrs.Orthographic(-20, 90), facecolor="white"),transform=ccrs.PlateCarree())
 mask_plot = mask_plot.where(mask_plot == 1)
@@ -70,7 +73,7 @@ globe.axes.set_extent([20,200,20,200])
 
 
 # apply regional masks
-cond = (~mask1) & (~mask2) & (~mask3) & (~mask4) & (~mask5)
+cond = (~mask1) & (~mask2) & (~mask3) & (~mask4)# & (~mask5)
 dat_arc = dat_arc.where( cond )
 dat_arc = dat_arc.where( cond )
 
