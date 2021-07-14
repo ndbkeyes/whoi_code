@@ -9,8 +9,8 @@ Created on Thu Jun 17 16:37:23 2021
 
 import xarray as xr
 import numpy as np
-from utils.entropy import entropy_all, max_ent
-
+from utils.entropy import entropy_all
+from utils.maximize import max_ent1, max_ent2, tsv_dists
 
 
 
@@ -61,13 +61,22 @@ dat_arc.close()
 #%%
 
 
-# file_data = 'NetCDFs/tsv_arc.nc'
-# dat_arc = xr.open_dataset(file_data, decode_times=False, autoclose=True)
-
-# T = dat_arc.t
-# print(T)
+file_data = 'NetCDFs/tsv_arc.nc'
+tsv_arc = xr.open_dataset(file_data, decode_times=False, autoclose=True)
 
     
 T = np.array([-1.25, -0.75, -0.25])
-Tavg = -0.96
-max_ent(T,Tavg)
+S = np.array([34.875,34.925])
+
+Tavg = -0.9
+Savg = 34.9099
+
+
+
+[Tavg, Savg] = tsv_dists(tsv_arc.volume)
+max_ent1(T,Tavg)
+max_ent1(S,Savg)
+max_ent2(tsv_arc.s,Savg,tsv_arc.t,Tavg)
+
+
+

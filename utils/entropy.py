@@ -7,7 +7,6 @@ Created on Mon Jun 28 11:12:54 2021
 
 
 import numpy as np
-from scipy import optimize
 import xarray as xr
 
 
@@ -106,76 +105,3 @@ def entropy_all(p_TS,disp=False):
 
 
 
-# maximization constraint polynomial to solve for Lagrange mults & max prob dist
-def f(y,X,Xavg):
-    X1 = X[0]
-    Xarr = X[1:]
-    return (Xavg - X1) + np.sum( (Xavg - Xarr) * y**(Xarr - X1) )
-
-# max constraint polynomial's derivative
-def fp1(y,X,Xavg):
-    X1 = X[0]
-    Xarr = X[1:]    
-    return np.sum( (Xavg - Xarr) * (Xarr - X1) * y**(Xarr - X1 - 1) )
-
-# max constraint polynomial's second derivative
-def fp2(y,X,Xavg):
-    X1 = X[0]
-    Xarr = X[1:]    
-    return np.sum( (Xavg - Xarr) * (Xarr - X1) * (Xarr - X1 - 1) * y**(Xarr - X1 - 2) )
-        
-
-
-# maximum possible entropy for n states (uniform probability!)
-def Hmax(n):
-    return np.round(np.log2(n),4)
-
-
-
-# univariate constrained entropy maximization
-def max_ent1(X,Xavg):
-   
-    # solve polynomial equation
-    root = optimize.newton(f, x0=1, fprime=fp1, fprime2=fp2, args=(X,Xavg))
-    
-    # beta, alpha from root
-    beta = -np.log(root)
-    alpha = np.log( np.sum( np.exp(-beta * X) ) )
-    
-    # max-entropy probability distribution
-    p_arr = np.empty((len(X),1))
-    for i in range(0,len(X)):
-        p_arr[i] = np.exp( -alpha - beta * X[i] )
-    p_arr /= np.sum(p_arr)
-    
-    # maximum constrainted entropy value 
-    Hp_max = H1(p_arr)
-    H_max = Hmax(len(X))
-    
-    # print & return values
-    print(f"beta = {np.round(beta,4)}, alpha = {np.round(alpha,4)}")
-    print(np.round(p_arr,4))
-    print(Hp_max)
-    print(H_max)
-    return alpha, beta, p_arr, Hp_max, H_max
-
-
-
-def max_ent2(X,Xavg, Y,Yavg):
-    
-    # solve polynomial equations
-    root_x = optimize.newton(f, x0=1, fprime=fp1, fprime2=fp2, args=(X,Xavg))
-    root_y = optimize.newton(f, x0=1, fprime=fp1, fprime2=fp2, args=(Y,Yavg))
-    
-    # beta, gamma, alpha from roots
-    beta = -np.log(root_x)
-    gamma = -np.log(root_y)
-    alpha = np.log( np.sum( np.exp(-beta * X - gamma * Y) ) )
-    
-    # max-entropy probability distribution
-    p_arr = np.empty((len(X),len(Y)))
-    for i in range(0,len(X)):
-        for j in range(0,len(Y)):
-            p_arr[i,j] = np.exp( -alpha - beta * X[i] - gamma * Y[i] )
-    p_arr /= np.sum(p_arr)
-    
