@@ -9,31 +9,126 @@ Created on Wed Jul 14 11:26:33 2021
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
-from utils.entropy import H1, H2
+from entropy import H1, H2
 
 
 
 #%% polynomials for maximization
 
 
-# maximization constraint polynomial to solve for Lagrange mults & max prob dist
+
+# vectorized maximum entropy constraint polynomial
 def f(y,X,Xavg):
+    
     X1 = X[0]
     Xarr = X[1:]
-    return (Xavg - X1) + np.sum( (Xavg - Xarr) * y**(Xarr - X1) )
-
-# max constraint polynomial's derivative
-def fp1(y,X,Xavg):
-    X1 = X[0]
-    Xarr = X[1:]    
-    return np.sum( (Xavg - Xarr) * (Xarr - X1) * y**(Xarr - X1 - 1) )
-
-# max constraint polynomial's second derivative
-def fp2(y,X,Xavg):
-    X1 = X[0]
-    Xarr = X[1:]    
-    return np.sum( (Xavg - Xarr) * (Xarr - X1) * (Xarr - X1 - 1) * y**(Xarr - X1 - 2) )
+    
+    ans = np.array([])
+    for i in range(len(y)):
+        val = (Xavg - X1) + np.sum( (Xavg - Xarr) * y[i]**(Xarr - X1) )
+        ans = np.append(ans,val)
         
+    return ans
+
+
+
+
+# vectorized first-deriv polynomial
+def fp1(y,X,Xavg):
+    
+    X1 = X[0]
+    Xarr = X[1:]
+    
+    ans = np.array([])
+    for i in range(len(y)):
+        val = np.sum( (Xavg - Xarr) * (Xarr - X1) * y[i]**(Xarr - X1 - 1) )
+        ans = np.append(ans,val)
+        
+    return ans
+
+
+
+# vectorized second-deriv polynomial
+def fp2(y,X,Xavg):
+    
+    X1 = X[0]
+    Xarr = X[1:]
+    
+    ans = np.array([])
+    for i in range(len(y)):
+        val = np.sum( (Xavg - Xarr) * (Xarr - X1) * (Xarr - X1 - 1) * y[i]**(Xarr - X1 - 2) )
+        ans = np.append(ans,val)
+        
+    return ans
+
+
+
+
+
+# # maximization constraint polynomial to solve for Lagrange mults & max prob dist
+# def f(y,X,Xavg):
+#     X1 = X[0]
+#     Xarr = X[1:]
+#     return (Xavg - X1) + np.sum( (Xavg - Xarr) * y**(Xarr - X1) )
+
+# # max constraint polynomial's derivative
+# def fp1(y,X,Xavg):
+#     X1 = X[0]
+#     Xarr = X[1:]    
+#     return np.sum( (Xavg - Xarr) * (Xarr - X1) * y**(Xarr - X1 - 1) )
+
+# # max constraint polynomial's second derivative
+# def fp2(y,X,Xavg):
+#     X1 = X[0]
+#     Xarr = X[1:]    
+#     return np.sum( (Xavg - Xarr) * (Xarr - X1) * (Xarr - X1 - 1) * y**(Xarr - X1 - 2) )
+        
+
+
+
+#%%
+
+
+
+
+
+
+
+def poly_solve(func,arg_tuple,plot=False,guesses=0):
+    
+    X = arg_tuple[0]
+    Xavg = arg_tuple[1]
+    
+    # default array of guesses
+    if guesses == 0:
+        guesses = np.linspace(0,200,1000)
+    
+    # run Newton's Method
+    root = optimize.newton(f, x0=guesses, fprime=fp1, fprime2=fp2, args=arg_tuple, maxiter=10000, full_output=True)
+
+    
+    # get the roots that CONVERGED
+    actual_roots = root.root[root.converged]
+
+    # round all of them off so that slightly different ones become the same
+    actual_roots = np.unique(np.round(actual_roots,4))
+    
+    # eliminate false roots (that don't actualy have a value close to zero)
+    actual_vals = f(actual_roots,X,Xavg)
+    # do it by checking against the smallest value we have - sorta assumes taht at least one root is real but w/e idk
+    actual_roots = actual_roots[abs(actual_vals) <= abs(2 * np.nanmin(actual_vals))]
+    
+    
+    print("roots:", actual_roots)
+    
+    # plot function and roots
+    if plot:
+        plt.figure()
+        plt.plot(guesses,f(guesses,X,Xavg))
+        plt.ylim(-10000,10000)
+        plt.scatter(actual_roots,f(actual_roots,X,Xavg))
+    
+    return actual_roots
 
 
 
@@ -45,7 +140,7 @@ def fp2(y,X,Xavg):
 def max_ent1(X,Xavg):
    
     # solve polynomial equation
-    root = optimize.newton(f, x0=10, fprime=fp1, fprime2=fp2, args=(X,Xavg))
+    root = optimize.newton(f, x0=1000, fprime=fp1, fprime2=fp2, args=(X,Xavg))
     
     # beta, alpha from root
     beta = -np.log(root)
@@ -132,3 +227,11 @@ def tsv_dists(xarr):
     
     return T_avg, S_avg
  
+    
+ 
+    
+ 
+X = np.linspace(-1,8,21)
+Xavg = 7.8
+
+poly_solve(f,(X,Xavg),plot=True)
