@@ -18,7 +18,7 @@ from entropy import H1, H2
 
 
 # vectorized maximum entropy constraint polynomial
-def f(y,X,Xavg):
+def f_vec(y,X,Xavg):
     
     X1 = X[0]
     Xarr = X[1:]
@@ -34,7 +34,7 @@ def f(y,X,Xavg):
 
 
 # vectorized first-deriv polynomial
-def fp1(y,X,Xavg):
+def fp1_vec(y,X,Xavg):
     
     X1 = X[0]
     Xarr = X[1:]
@@ -49,7 +49,7 @@ def fp1(y,X,Xavg):
 
 
 # vectorized second-deriv polynomial
-def fp2(y,X,Xavg):
+def fp2_vec(y,X,Xavg):
     
     X1 = X[0]
     Xarr = X[1:]
@@ -65,23 +65,23 @@ def fp2(y,X,Xavg):
 
 
 
-# # maximization constraint polynomial to solve for Lagrange mults & max prob dist
-# def f(y,X,Xavg):
-#     X1 = X[0]
-#     Xarr = X[1:]
-#     return (Xavg - X1) + np.sum( (Xavg - Xarr) * y**(Xarr - X1) )
+# maximization constraint polynomial to solve for Lagrange mults & max prob dist
+def f(y,X,Xavg):
+    X1 = X[0]
+    Xarr = X[1:]
+    return (Xavg - X1) + np.sum( (Xavg - Xarr) * y**(Xarr - X1) )
 
-# # max constraint polynomial's derivative
-# def fp1(y,X,Xavg):
-#     X1 = X[0]
-#     Xarr = X[1:]    
-#     return np.sum( (Xavg - Xarr) * (Xarr - X1) * y**(Xarr - X1 - 1) )
+# max constraint polynomial's derivative
+def fp1(y,X,Xavg):
+    X1 = X[0]
+    Xarr = X[1:]    
+    return np.sum( (Xavg - Xarr) * (Xarr - X1) * y**(Xarr - X1 - 1) )
 
-# # max constraint polynomial's second derivative
-# def fp2(y,X,Xavg):
-#     X1 = X[0]
-#     Xarr = X[1:]    
-#     return np.sum( (Xavg - Xarr) * (Xarr - X1) * (Xarr - X1 - 1) * y**(Xarr - X1 - 2) )
+# max constraint polynomial's second derivative
+def fp2(y,X,Xavg):
+    X1 = X[0]
+    Xarr = X[1:]    
+    return np.sum( (Xavg - Xarr) * (Xarr - X1) * (Xarr - X1 - 1) * y**(Xarr - X1 - 2) )
         
 
 
@@ -94,7 +94,7 @@ def fp2(y,X,Xavg):
 
 
 
-def poly_solve(func,arg_tuple,plot=False,guesses=0):
+def poly_solve(f,fp1,fp2,arg_tuple,plot=False,guesses=0):
     
     X = arg_tuple[0]
     Xavg = arg_tuple[1]
@@ -125,7 +125,8 @@ def poly_solve(func,arg_tuple,plot=False,guesses=0):
     if plot:
         plt.figure()
         plt.plot(guesses,f(guesses,X,Xavg))
-        plt.ylim(-10000,10000)
+        plt.xlim(0,20)
+        plt.ylim(-1000,1000)
         plt.scatter(actual_roots,f(actual_roots,X,Xavg))
     
     return actual_roots
@@ -140,7 +141,8 @@ def poly_solve(func,arg_tuple,plot=False,guesses=0):
 def max_ent1(X,Xavg):
    
     # solve polynomial equation
-    root = optimize.newton(f, x0=1000, fprime=fp1, fprime2=fp2, args=(X,Xavg))
+    root = optimize.newton(f, x0=10, fprime=fp1, fprime2=fp2, args=(X,Xavg))
+    # root = poly_solve(f,fp1,fp2,(X,Xavg),plot=True)
     
     # beta, alpha from root
     beta = -np.log(root)
@@ -232,6 +234,7 @@ def tsv_dists(xarr):
     
  
 X = np.linspace(-1,8,21)
-Xavg = 7.8
+Xavg = 7.3
 
-poly_solve(f,(X,Xavg),plot=True)
+poly_solve(f_vec,fp1_vec,fp2_vec,(X,Xavg),plot=True)
+max_ent1(X,Xavg)

@@ -10,7 +10,7 @@ Created on Thu Jun 17 16:37:23 2021
 import xarray as xr
 import numpy as np
 from utils.entropy import entropy_all
-from utils.maximize import max_ent1, max_ent2, tsv_dists
+from utils.maximize import *
 
 
 
@@ -76,7 +76,7 @@ Savg = 34.9099
 [Tavg, Savg] = tsv_dists(tsv_arc.volume)
 max_ent1(T,Tavg)
 max_ent1(S,Savg)
-max_ent2(tsv_arc.s,Savg,tsv_arc.t,Tavg)
+
 
 
 
