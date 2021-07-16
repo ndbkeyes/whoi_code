@@ -17,14 +17,7 @@ def H1(p_arr):
     for p in p_arr:
         if p != 0:
             H += p * np.log2(p)
-    H *= -1
-    
-    if isinstance(p_arr,xr.core.dataarray.DataArray):
-        H = np.round(H.values[0],3)
-    else:
-        H = np.round(H,3)
-    
-    return H
+    return -np.round(H,3)    
     
     
     
@@ -41,15 +34,11 @@ def H2(p_grid):
             p = p_grid[i,j]
             if p != 0:
                 H += p * np.log2(p)
+                
+                
+    print(H)
     
-    H *= -1
-    
-    if isinstance(p_grid,xr.core.dataarray.DataArray):
-        H = np.round(H.values[0],4)
-    else:
-        H = np.round(H,4)
-    
-    return H
+    return -np.round(H,4)
     
 
 # conditional Shannon information entropy

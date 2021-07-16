@@ -11,72 +11,89 @@ import xarray as xr
 import numpy as np
 from utils.entropy import entropy_all
 from utils.maximize import *
-
+import matplotlib.pyplot as plt
 
 
 #%%
 
 
 # read in volumetric T-S files
-dat_grn = xr.open_dataset('NetCDFs/tsv_grn.nc', decode_times=False, autoclose=True)
-dat_arc = xr.open_dataset('NetCDFs/tsv_arc.nc', decode_times=False, autoclose=True)
+tsv_grn = xr.open_dataset('NetCDFs/tsv_grn.nc', decode_times=False, autoclose=True)
+tsv_arc = xr.open_dataset('NetCDFs/tsv_arc.nc', decode_times=False, autoclose=True)
+tsv_cmk = xr.open_dataset('NetCDFs/tsv_cmk.nc', decode_times=False, autoclose=True)
 
 # entropy calcs for entirety of Greenland Sea and Arctic Ocean
 print("grn")
-entropy_all(dat_grn.volume,True)
-print("arc")
-entropy_all(dat_arc.volume,True)
+entropy_all(tsv_grn.volume,True)
+print("cmk")
+entropy_all(tsv_cmk.volume,True)
 
 # condition to get Greenland deep water vs. upper water
-cond = (dat_grn.temperature >= -1.5) & (dat_grn.temperature < 0) & (dat_grn.salinity >= 34.85) & (dat_grn.salinity < 34.95)
-deep = dat_grn.where(cond)
-upper = dat_grn.where(~cond)
+cond_grn = (tsv_grn.t >= -1.5) & (tsv_grn.t < 0) & (tsv_grn.s >= 34.8) & (tsv_grn.s <= 34.95)
+deep_grn = tsv_grn.where(cond_grn)
+upper_grn = tsv_grn.where(~cond_grn)
 
 # entropy calcs for Greenland deep vs upper
 print("grn - deep")
-deep_H_T, deep_H_S, deep_H_TS = entropy_all(deep.volume)
+entropy_all(deep_grn.volume,True)
 print("grn - upper")
-upper_H_T, upper_H_S, upper_H_TS = entropy_all(upper.volume)
+entropy_all(upper_grn.volume,True)
 
+
+cond_cmk = (tsv_cmk.t >= -1.5) & (tsv_cmk.t < 0) & (tsv_cmk.s >= 34.8) & (tsv_cmk.s <= 34.95)
+deep_cmk = tsv_cmk.where(cond_cmk)
+upper_cmk = tsv_cmk.where(~cond_cmk)
+
+# entropy calcs for CMK deep vs upper
+print("cmk - deep")
+entropy_all(deep_cmk.volume,True)
+print("cmk - upper")
+entropy_all(upper_cmk.volume,True)
 
 # close NC files
-dat_grn.close()
-dat_arc.close()
+tsv_grn.close()
+tsv_arc.close()
+tsv_cmk.close()
 
 
 
 
 
+#%% univariate testing
 
-#%%
+T_test = np.array([-1.25,-0.75,-0.25])
+Tavg_test = -0.96
 
+plt.figure()
+p_arr = max_ent1(T,Tavg_test)
+plt.plot(T_test,p_arr)
+plt.xlabel("T")
+plt.ylabel("probability")
 
-# print("\t\t\t\tH(T)/H(S)\t\t J(T,S)\n\t\t\t\t--------\t\t-------")
-# print("upper water:\t", np.round(upper_H_T / upper_H_S,3), "\t\t\t", upper_H_TS)
-# print("deep water:  \t",np.round(deep_H_T / deep_H_S,3), "\t\t\t", deep_H_TS)
+p_T, p_S = tsv_dists2(deep_cmk.volume)
+plt.plot(T_test,p_T[1:4])
+plt.legend(["maximized distribution","actual distribution"])
 
-
-
-
-#%%
-
-
-file_data = 'NetCDFs/tsv_arc.nc'
-tsv_arc = xr.open_dataset(file_data, decode_times=False, autoclose=True)
-
-    
-T = np.array([-1.25, -0.75, -0.25])
-S = np.array([34.875,34.925])
-
-Tavg = -0.9
-Savg = 34.9099
+print(H1(p_T).values)
 
 
-
-[Tavg, Savg] = tsv_dists(tsv_arc.volume)
-max_ent1(T,Tavg)
-max_ent1(S,Savg)
+cut_dcv = deep_cmk.volume[1:4,-10:-8]
+print(H2(cut_dcv / np.sum(cut_dcv)))
 
 
+#%% bivariate testing
 
+from utils.maximize import *
 
+[Tavg, Savg] = tsv_dists(deep_cmk.volume)
+print(Tavg,Savg)
+
+root_x, root_y = max_ent2(np.array([34.85,34.95]),34.9382, np.array([-1.25,-0.75,-0.25]),-0.96)
+print("roots:",np.round(root_x,3), np.round(root_y,3))
+
+plt.figure()
+plt.xlabel("x & y")
+plt.ylabel("f")
+plt.legend(["f(x)","f(y)"])
+plt.scatter(root_x,f_TS([root_x,root_y],T,Tavg,S,Savg)[0])
+plt.scatter(root_y,f_TS([root_x,root_y],T,Tavg,S,Savg)[1])

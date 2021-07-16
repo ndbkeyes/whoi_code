@@ -9,13 +9,14 @@ Created on Wed Jul 14 11:26:33 2021
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
-from entropy import H1, H2
+from utils.entropy import H1, H2
+import matplotlib.colors as colors
 
 
 
 #%% polynomials for maximization
 
-
+### UNIVARIATE (vectorized)
 
 # vectorized maximum entropy constraint polynomial
 def f_vec(y,X,Xavg):
@@ -65,24 +66,58 @@ def fp2_vec(y,X,Xavg):
 
 
 
-# maximization constraint polynomial to solve for Lagrange mults & max prob dist
+### UNIVARIATE (unvectorized)
+
+# max constraint to solve
 def f(y,X,Xavg):
     X1 = X[0]
     Xarr = X[1:]
     return (Xavg - X1) + np.sum( (Xavg - Xarr) * y**(Xarr - X1) )
 
-# max constraint polynomial's derivative
+# max constraint's 1st deriv
 def fp1(y,X,Xavg):
     X1 = X[0]
     Xarr = X[1:]    
     return np.sum( (Xavg - Xarr) * (Xarr - X1) * y**(Xarr - X1 - 1) )
 
-# max constraint polynomial's second derivative
+# max constraint's 2nd deriv
 def fp2(y,X,Xavg):
     X1 = X[0]
     Xarr = X[1:]    
     return np.sum( (Xavg - Xarr) * (Xarr - X1) * (Xarr - X1 - 1) * y**(Xarr - X1 - 2) )
         
+
+
+
+
+### BIVARIATE (unvectorized)
+
+# 2vbl constraint to solve (fixed errors!)
+def f_TS(xy,X,Xavg,Y,Yavg):
+    
+    x, y = xy
+    
+    num_X = 0
+    denom_X = 0
+    num_Y = 0
+    denom_Y = 0
+    
+    for i in range(len(X)):
+        for j in range(len(Y)):
+            
+            # T constraint values
+            num_X += X[i] * x**X[i] * y**Y[j]
+            denom_X += x**X[i] * y**Y[j]
+            
+            # S constraint values
+            num_Y += Y[j] * x**X[i] * y**Y[j]
+            denom_Y += x**X[i] * y**Y[j]        
+            
+    
+    X_val = num_X / denom_X - Xavg
+    Y_val = num_Y / denom_Y - Yavg
+    
+    return np.array([X_val, Y_val])
 
 
 
@@ -141,7 +176,7 @@ def poly_solve(f,fp1,fp2,arg_tuple,plot=False,guesses=0):
 def max_ent1(X,Xavg):
    
     # solve polynomial equation
-    root = optimize.newton(f, x0=10, fprime=fp1, fprime2=fp2, args=(X,Xavg))
+    root = optimize.newton(f, x0=0.1, fprime=fp1, fprime2=fp2, args=(X,Xavg), maxiter=1000)
     # root = poly_solve(f,fp1,fp2,(X,Xavg),plot=True)
     
     # beta, alpha from root
@@ -154,8 +189,8 @@ def max_ent1(X,Xavg):
         p_arr[i] = np.exp( -alpha - beta * X[i] )
     p_arr /= np.sum(p_arr)
     
-    plt.figure()
-    plt.plot(X,p_arr)
+    # plt.figure()
+    # plt.plot(X,p_arr)
     
     # maximum constrainted entropy value 
     Hp_max = H1(p_arr)
@@ -166,17 +201,57 @@ def max_ent1(X,Xavg):
     print(np.round(p_arr,4))
     print(Hp_max)
     print(H_max)
-    return alpha, beta, p_arr, Hp_max, H_max
+    
+    # plt.plot(X,p_arr)
+    # plt.vlines(Xavg,0,1)
+    
+    return p_arr
 
 
 
-# bivariate maximization
+# # bivariate maximization
+# # WRONG, used incorrect math for the constraints
+# def max_ent2(X,Xavg, Y,Yavg):
+    
+#     # solve polynomial equations
+#     root_x = optimize.newton(f, x0=10, fprime=fp1, fprime2=fp2, args=(X,Xavg))
+#     root_y = optimize.newton(f, x0=10, fprime=fp1, fprime2=fp2, args=(Y,Yavg))
+#     print("found roots")
+    
+#     # beta, gamma, alpha from roots
+#     beta = -np.log(root_x)
+#     gamma = -np.log(root_y)
+#     alpha = np.log( np.sum( np.exp(-beta * X) ) * np.sum( np.exp(-gamma * Y) ) )
+    
+#     # max-entropy probability distribution
+#     p_arr = np.empty((len(Y),len(X)))
+#     for i in range(0,len(Y)):
+#         for j in range(0,len(X)):
+#             p_arr[i,j] = np.exp( -alpha - beta * X[j] - gamma * Y[i] )
+#     p_arr /= np.sum(p_arr)
+    
+#     # maximum constrainted entropy value 
+#     Hp_max = H2(p_arr)
+    
+#     # print & return values
+#     print(f"beta = {np.round(beta,4)}, gamma = {np.round(gamma,4)}, alpha = {np.round(alpha,4)}")
+#     print(np.round(p_arr,4))
+#     print(np.round(Hp_max,4))
+#     # return alpha, beta, p_arr, Hp_max, H_max
+    
+#     plt.figure()
+#     plt.pcolormesh(X,Y,p_arr,shading="nearest",cmap="YlOrRd")
+#     plt.colorbar()
+    
+#     return p_arr
+
+
+# BIVARIATE FIXED
 def max_ent2(X,Xavg, Y,Yavg):
     
-    # solve polynomial equations
-    root_x = optimize.newton(f, x0=10, fprime=fp1, fprime2=fp2, args=(X,Xavg))
-    root_y = optimize.newton(f, x0=10, fprime=fp1, fprime2=fp2, args=(Y,Yavg))
-    print("found roots")
+    g = np.array([0.1,0.1])
+    [root_x, root_y] = optimize.newton(f_TS, g, args=(X,Xavg, Y,Yavg))
+    
     
     # beta, gamma, alpha from roots
     beta = -np.log(root_x)
@@ -195,21 +270,28 @@ def max_ent2(X,Xavg, Y,Yavg):
     
     # print & return values
     print(f"beta = {np.round(beta,4)}, gamma = {np.round(gamma,4)}, alpha = {np.round(alpha,4)}")
-    print(np.round(p_arr,4))
-    print(np.round(Hp_max,4))
+    print("probability array:", np.round(p_arr,4))
+    print("Hpmax:", np.round(Hp_max,4))
     # return alpha, beta, p_arr, Hp_max, H_max
     
     plt.figure()
-    plt.pcolormesh(X,Y,p_arr,shading="nearest",cmap="YlOrRd")
+    pcm = plt.pcolormesh(X,Y,p_arr,shading='nearest',cmap="YlOrRd")
+    pcm.norm = colors.LogNorm()
     plt.colorbar()
+    plt.xlabel("salinity (o/oo)")
+    plt.ylabel("potential temperature (C)")
     
-    return p_arr
+#     return p_arr
+    
+    return root_x, root_y
 
 
 #%% finding distributions of actual TSV space
 
 
 def tsv_dists(xarr):
+    
+    # np.log(xarr).plot()
     
     p_T = xarr.sum('s')
     p_S = xarr.sum('t')
@@ -219,7 +301,7 @@ def tsv_dists(xarr):
     T_avg = np.average(xarr.t.values,weights=p_T)
     S_avg = np.average(xarr.s.values,weights=p_S)
 
-    print(T_avg, S_avg)
+    print("T and S averages:", np.round(T_avg,3), np.round(S_avg,3))
     
     plt.figure()
     plt.plot(xarr.t.values,p_T.values)
@@ -228,13 +310,22 @@ def tsv_dists(xarr):
     plt.plot(xarr.s.values,p_S.values)
     
     return T_avg, S_avg
- 
-    
- 
-    
- 
-X = np.linspace(-1,8,21)
-Xavg = 7.3
 
-poly_solve(f_vec,fp1_vec,fp2_vec,(X,Xavg),plot=True)
-max_ent1(X,Xavg)
+
+
+
+def tsv_dists2(xarr):
+    
+    # np.log(xarr).plot()
+    
+    p_T = xarr.sum('s')
+    p_S = xarr.sum('t')
+    p_T /= np.sum(p_T)
+    p_S /= np.sum(p_S)
+    
+    return p_T, p_S
+ 
+    
+#%%
+
+
