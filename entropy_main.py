@@ -88,7 +88,7 @@ from utils.maximize import *
 [Tavg, Savg] = tsv_dists(deep_cmk.volume)
 print(Tavg,Savg)
 
-root_x, root_y = max_ent2(np.array([34.85,34.95]),34.9382, np.array([-1.25,-0.75,-0.25]),-0.96)
+root_x, root_y = max_ent2(np.array([34.85,34.95]),34.94, np.array([-1.25,-0.75,-0.25]),-0.96)
 print("roots:",np.round(root_x,3), np.round(root_y,3))
 
 plt.figure()

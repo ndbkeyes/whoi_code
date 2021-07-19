@@ -167,6 +167,46 @@ def poly_solve(f,fp1,fp2,arg_tuple,plot=False,guesses=0):
     return actual_roots
 
 
+def poly_solve2(f,arg_tuple,plot=False,guesses=0):
+    
+    X, Xavg, Y, Yavg = arg_tuple
+    
+    # default array of guesses
+    if guesses == 0:
+        guesses = np.empty((2,1000))
+        guesses[0] = np.linspace(0,200,1000)
+        guesses[1] = np.linspace(0,200,1000)
+    
+    # run Newton's Method
+    root = optimize.newton(f_TS, x0=guesses, args=arg_tuple, maxiter=10000, full_output=True)
+
+    
+    # get the roots that CONVERGED
+    actual_roots = root.root[root.converged]
+    print(actual_roots)
+
+    # round all of them off so that slightly different ones become the same
+    actual_roots = np.unique(np.round(actual_roots,4))
+    
+    # eliminate false roots (that don't actualy have a value close to zero)
+    [actual_vals_x,actual_vals_y] = f(actual_roots,X,Xavg,Y,Yavg)
+    # do it by checking against the smallest value we have - sorta assumes taht at least one root is real but w/e idk
+    actual_roots_x = actual_roots_x[abs(actual_vals) <= abs(2 * np.nanmin(actual_vals))]
+    
+    
+    print("roots:", actual_roots)
+    
+    # plot function and roots
+    if plot:
+        plt.figure()
+        plt.plot(guesses,f(guesses,X,Xavg,Y,Yavg))
+        plt.xlim(0,20)
+        plt.ylim(-1000,1000)
+        plt.scatter(actual_roots,f(actual_roots,X,Xavg,Y,Yavg))
+    
+    return actual_roots
+
+
 
 #%% one and two variable constrained entropy maximization
 
@@ -250,8 +290,10 @@ def max_ent1(X,Xavg):
 def max_ent2(X,Xavg, Y,Yavg):
     
     g = np.array([0.1,0.1])
-    [root_x, root_y] = optimize.newton(f_TS, g, args=(X,Xavg, Y,Yavg))
-    
+    # [root_x, root_y] = optimize.newton(f_TS, g, args=(X,Xavg, Y,Yavg))
+    # print("Roots:",root_x,root_y)
+    roots = poly_solve2(f_TS,(X,Xavg,Y,Yavg))
+    root_x,root_y = roots
     
     # beta, gamma, alpha from roots
     beta = -np.log(root_x)
